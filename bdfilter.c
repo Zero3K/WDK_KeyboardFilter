@@ -1,7 +1,23 @@
 #include <NTDDK.h>
 #define KDB_DRIVER_NAME L"\\Driver\\Kbdclass"
 #define DELAY_ONE_MILLISECOND -10
+#define LAG_MITIGATION_THRESHOLD_MS 50  // Threshold in milliseconds to filter duplicate keys
+#define MAX_TRACKED_KEYS 256  // Maximum number of recent key events to track
+
 ULONG gC2pKeyCount;
+
+// Structure to track recent key events for lag mitigation
+typedef struct _KEY_EVENT_TRACKER {
+    USHORT MakeCode;
+    USHORT Flags;
+    LARGE_INTEGER Timestamp;
+    BOOLEAN InUse;
+} KEY_EVENT_TRACKER, *PKEY_EVENT_TRACKER;
+
+// Global array to track recent key events
+KEY_EVENT_TRACKER gRecentKeyEvents[MAX_TRACKED_KEYS];
+ULONG gKeyEventIndex = 0;
+KSPIN_LOCK gKeyTrackerSpinLock;
 NTSTATUS
 ObReferenceObjectByName(
 	PUNICODE_STRING ObjectName,
@@ -29,8 +45,7 @@ typedef struct _KEYBOARD_INPUT_DATA{
 	USHORT Reserved;
 	ULONG ExtraInformation;
 }KEYBOARD_INPUT_DATA,*PKEYBOARD_INPUT_DATA;
-#include <ntddk.h>
-VOID MakeCodeToASCII(USHORT MakeCode,USHORT Flags,PCHAR Ascii)//AsciiÎª16×Ö½Ú
+VOID MakeCodeToASCII(USHORT MakeCode,USHORT Flags,PCHAR Ascii)//AsciiÎª16ï¿½Ö½ï¿½
 {
 	if(Flags>=2)
 	{
@@ -46,32 +61,32 @@ VOID MakeCodeToASCII(USHORT MakeCode,USHORT Flags,PCHAR Ascii)//AsciiÎª16×Ö½Ú
 			case 0x5b:
 			case 0x5c:
 				{
-					strncpy(Ascii,"Windows°´ÏÂ",16);
+					strncpy(Ascii,"Windowsï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			case 0x48:
 				{
-					strncpy(Ascii,"Up°´ÏÂ",16);
+					strncpy(Ascii,"Upï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			case 0x50:
 				{
-					strncpy(Ascii,"Down°´ÏÂ",16);
+					strncpy(Ascii,"Downï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			case 0x4b:
 				{
-					strncpy(Ascii,"Left°´ÏÂ",16);
+					strncpy(Ascii,"Leftï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			case 0x4d:
 				{
-					strncpy(Ascii,"Right°´ÏÂ",16);
+					strncpy(Ascii,"Rightï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			case 0x53:
 				{
-					strncpy(Ascii,"Del°´ÏÂ",16);
+					strncpy(Ascii,"Delï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			default:
@@ -93,32 +108,32 @@ VOID MakeCodeToASCII(USHORT MakeCode,USHORT Flags,PCHAR Ascii)//AsciiÎª16×Ö½Ú
 			case 0x5b:
 			case 0x5c:
 				{
-					strncpy(Ascii,"Windowsµ¯Æð",16);
+					strncpy(Ascii,"Windowsï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			case 0x48:
 				{
-					strncpy(Ascii,"Upµ¯Æð",16);
+					strncpy(Ascii,"Upï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			case 0x50:
 				{
-					strncpy(Ascii,"Downµ¯Æð",16);
+					strncpy(Ascii,"Downï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			case 0x4b:
 				{
-					strncpy(Ascii,"Leftµ¯Æð",16);
+					strncpy(Ascii,"Leftï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			case 0x4d:
 				{
-					strncpy(Ascii,"Rightµ¯Æð",16);
+					strncpy(Ascii,"Rightï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			case 0x53:
 				{
-					strncpy(Ascii,"Delµ¯Æð",16);
+					strncpy(Ascii,"Delï¿½ï¿½ï¿½ï¿½",16);
 					break;
 				}
 			default:
@@ -461,14 +476,65 @@ VOID MakeCodeToASCII(USHORT MakeCode,USHORT Flags,PCHAR Ascii)//AsciiÎª16×Ö½Ú
 	}
 	if(Flags==0)
 	{
-		strncat(Ascii,"°´ÏÂ",4);
+		strncat(Ascii,"ï¿½ï¿½ï¿½ï¿½",4);
 	}
 	else
 	{
-		strncat(Ascii,"µ¯Æð",4);
+		strncat(Ascii,"ï¿½ï¿½ï¿½ï¿½",4);
 	}
 	return;
 }
+
+// Function to check if a key event is a duplicate (lag-induced)
+BOOLEAN IsLagInducedDuplicate(USHORT MakeCode, USHORT Flags)
+{
+    LARGE_INTEGER CurrentTime;
+    LARGE_INTEGER TimeDifference;
+    ULONG i;
+    KIRQL OldIrql;
+    BOOLEAN IsDuplicate = FALSE;
+    
+    // Only check for duplicates on key press events (not releases)
+    if (Flags != 0) {
+        return FALSE;
+    }
+    
+    KeQuerySystemTime(&CurrentTime);
+    
+    KeAcquireSpinLock(&gKeyTrackerSpinLock, &OldIrql);
+    
+    // Check recent key events for duplicates
+    for (i = 0; i < MAX_TRACKED_KEYS; i++) {
+        if (gRecentKeyEvents[i].InUse && 
+            gRecentKeyEvents[i].MakeCode == MakeCode &&
+            gRecentKeyEvents[i].Flags == Flags) {
+            
+            TimeDifference.QuadPart = CurrentTime.QuadPart - gRecentKeyEvents[i].Timestamp.QuadPart;
+            // Convert to milliseconds (100ns units to ms)
+            TimeDifference.QuadPart = TimeDifference.QuadPart / 10000;
+            
+            if (TimeDifference.QuadPart < LAG_MITIGATION_THRESHOLD_MS) {
+                IsDuplicate = TRUE;
+                break;
+            }
+        }
+    }
+    
+    // Add current event to tracking array if not a duplicate
+    if (!IsDuplicate) {
+        gRecentKeyEvents[gKeyEventIndex].MakeCode = MakeCode;
+        gRecentKeyEvents[gKeyEventIndex].Flags = Flags;
+        gRecentKeyEvents[gKeyEventIndex].Timestamp = CurrentTime;
+        gRecentKeyEvents[gKeyEventIndex].InUse = TRUE;
+        
+        gKeyEventIndex = (gKeyEventIndex + 1) % MAX_TRACKED_KEYS;
+    }
+    
+    KeReleaseSpinLock(&gKeyTrackerSpinLock, OldIrql);
+    
+    return IsDuplicate;
+}
+
 VOID DriverUnload(PDRIVER_OBJECT driver)
 {
 	PC2P_DEV_EXT devExt;
@@ -492,12 +558,12 @@ VOID DriverUnload(PDRIVER_OBJECT driver)
 	{
 		KeDelayExecutionThread(KernelMode,FALSE,&lDelay);
 	}
-	DbgPrint("¼üÅÌ¹ýÂËÇý¶¯:Çý¶¯¹Ø±Õ");
+	DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½ï¿½ï¿½Ø±ï¿½");
 	return;
 }
 NTSTATUS kbDispatchGeneral(PDEVICE_OBJECT DeviceObject,PIRP Irp)
 {
-	DbgPrint("¼üÅÌ¹ýÂËÇý¶¯:ÆäËûÐÅÏ¢");
+	DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¢");
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(((PC2P_DEV_EXT)DeviceObject->DeviceExtension)->LowerDeviceObject,Irp);
 }
@@ -520,7 +586,7 @@ NTSTATUS kbpnp(PDEVICE_OBJECT DeviceObject,PIRP Irp)
 	{
 	case IRP_MN_REMOVE_DEVICE:
 		{
-			DbgPrint("¼üÅÌ¹ýÂËÇý¶¯:ÓÐÒ»¸öUSB¼üÅÌÍË³öÁË(PNPÇëÇó)");
+			DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½Ò»ï¿½ï¿½USBï¿½ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½(PNPï¿½ï¿½ï¿½ï¿½)");
 			IoSkipCurrentIrpStackLocation(Irp);
 			IoCallDriver(devExt->LowerDeviceObject,Irp);
 			IoDetachDevice(devExt->LowerDeviceObject);
@@ -543,17 +609,53 @@ NTSTATUS kbReadComplete(PDEVICE_OBJECT DeviceObject,PIRP Irp,PVOID Context)
 	ULONG buf_len=0;
 	ULONG i;
 	PKEYBOARD_INPUT_DATA KeyData;
+	PKEYBOARD_INPUT_DATA FilteredKeyData;
 	PCHAR Ascii="1234567890123456";
 	stackirp=IoGetCurrentIrpStackLocation(Irp);
 	if(NT_SUCCESS(Irp->IoStatus.Status))
 	{
 		buf_len=Irp->IoStatus.Information/sizeof(KEYBOARD_INPUT_DATA);
 		KeyData=Irp->AssociatedIrp.SystemBuffer;
-		for(i=0;i<buf_len;i++)
-		{
-			MakeCodeToASCII(KeyData->MakeCode,KeyData->Flags,Ascii);
-			//DbgPrint("¼üÅÌ¹ýÂËÇý¶¯:¼üÅÌÉ¨ÃèÂë-%2x%s",KeyData->MakeCode,KeyData->Flags?"µ¯Æð":"°´ÏÂ");
-			DbgPrint("¼üÅÌ¹ýÂËÇý¶¯:%s",Ascii);
+		
+		// Create a temporary buffer for filtered key data
+		FilteredKeyData = (PKEYBOARD_INPUT_DATA)ExAllocatePoolWithTag(NonPagedPool, 
+			buf_len * sizeof(KEYBOARD_INPUT_DATA), 'FKey');
+		
+		if (FilteredKeyData) {
+			ULONG FilteredCount = 0;
+			// Process each key event and filter out lag-induced duplicates
+			for(i=0;i<buf_len;i++)
+			{
+				if (!IsLagInducedDuplicate(KeyData[i].MakeCode, KeyData[i].Flags)) {
+					// Not a duplicate, include in filtered data
+					FilteredKeyData[FilteredCount] = KeyData[i];
+					FilteredCount++;
+					
+					MakeCodeToASCII(KeyData[i].MakeCode,KeyData[i].Flags,Ascii);
+					DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:%s",Ascii);
+				} else {
+					// Filtered out duplicate key event
+					MakeCodeToASCII(KeyData[i].MakeCode,KeyData[i].Flags,Ascii);
+					DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½Ñ¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø¸ï¿½ï¿½ï¿½ï¿½ï¿½:%s",Ascii);
+				}
+			}
+			
+			// Copy filtered data back to the original buffer
+			for (i = 0; i < FilteredCount; i++) {
+				KeyData[i] = FilteredKeyData[i];
+			}
+			
+			// Update the information field with the new count
+			Irp->IoStatus.Information = FilteredCount * sizeof(KEYBOARD_INPUT_DATA);
+			
+			ExFreePoolWithTag(FilteredKeyData, 'FKey');
+		} else {
+			// If allocation failed, process without filtering
+			for(i=0;i<buf_len;i++)
+			{
+				MakeCodeToASCII(KeyData[i].MakeCode,KeyData[i].Flags,Ascii);
+				DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:%s",Ascii);
+			}
 		}
 	}
 	gC2pKeyCount--;
@@ -572,7 +674,7 @@ NTSTATUS kbread(PDEVICE_OBJECT DeviceObject,PIRP Irp)
 	KeInitializeEvent(&waitEvent,NotificationEvent,FALSE);
 	if(Irp->CurrentLocation==1)
 	{
-		DbgPrint("¼üÅÌ¹ýÂËÇý¶¯:²¶»ñÇý¶¯Óöµ½ÁËÐé¼ÙµÄµ±Ç°Î»ÖÃ");
+		DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ÙµÄµï¿½Ç°Î»ï¿½ï¿½");
 		status=STATUS_INVALID_DEVICE_REQUEST;
 		Irp->IoStatus.Status=status;
 		Irp->IoStatus.Information=0;
@@ -594,15 +696,24 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 	PDRIVER_OBJECT kbddriver=NULL;
 	PC2P_DEV_EXT devExt;
 	
-	PDEVICE_OBJECT pFilterDriver=NULL;//¹ýÂËÇý¶¯
-	PDEVICE_OBJECT pTargetDriver=NULL;//Ä¿±êÇý¶¯
-	PDEVICE_OBJECT pLowerDriver=NULL;//ÏÂ·½Çý¶¯
+	PDEVICE_OBJECT pFilterDriver=NULL;//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	PDEVICE_OBJECT pTargetDriver=NULL;//Ä¿ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+	PDEVICE_OBJECT pLowerDriver=NULL;//ï¿½Â·ï¿½ï¿½ï¿½ï¿½ï¿½
 
-	DbgPrint("¼üÅÌ¹ýÂËÇý¶¯:Çý¶¯¿ªÆô");
+	DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
 	
 	
 	
 	gC2pKeyCount=0;
+	
+	// Initialize key event tracking for lag mitigation
+	KeInitializeSpinLock(&gKeyTrackerSpinLock);
+	for(i=0;i<MAX_TRACKED_KEYS;i++)
+	{
+		gRecentKeyEvents[i].InUse = FALSE;
+	}
+	gKeyEventIndex = 0;
+	
 	for(i=0;i<IRP_MJ_MAXIMUM_FUNCTION;i++)
 	{
 		driver->MajorFunction[i]=kbDispatchGeneral;
@@ -615,7 +726,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 	status=ObReferenceObjectByName(&kbdname,OBJ_CASE_INSENSITIVE,NULL,FILE_ALL_ACCESS,IoDriverObjectType,KernelMode,NULL,&kbddriver);
 	if(!NT_SUCCESS(status))
 	{
-		DbgPrint("¼üÅÌ¹ýÂËÇý¶¯:ObReferenceObjectByNameº¯Êý·µ»Ø´íÎó");
+		DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ObReferenceObjectByNameï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ø´ï¿½ï¿½ï¿½");
 		return(status);
 	}
 	else
@@ -629,13 +740,13 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 		status=IoCreateDevice(driver,sizeof(C2P_DEV_EXT),NULL,pTargetDriver->DeviceType,pTargetDriver->Characteristics,FALSE,&pFilterDriver);
 		if(!NT_SUCCESS(status))
 		{
-			DbgPrint("¼üÅÌ¹ýÂËÇý¶¯:´´½¨¹ýÂËÉè±¸Ê§°Ü");
+			DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½è±¸Ê§ï¿½ï¿½");
 			return status;
 		}
 		pLowerDriver=IoAttachDeviceToDeviceStack(pFilterDriver,pTargetDriver);
 		if(!pLowerDriver)
 		{
-			DbgPrint("¼üÅÌ¹ýÂËÇý¶¯:°ó¶¨Éè±¸Ê§°Ü");
+			DbgPrint("ï¿½ï¿½ï¿½Ì¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½:ï¿½ï¿½ï¿½è±¸Ê§ï¿½ï¿½");
 			IoDeleteDevice(pFilterDriver);
 			pFilterDriver=NULL;
 			return status;
@@ -643,7 +754,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 		devExt=(PC2P_DEV_EXT)(pFilterDriver->DeviceExtension);
 		memset(devExt,0,sizeof(C2P_DEV_EXT));
 		devExt->NodeSize=sizeof(C2P_DEV_EXT);
-		//KeInitializeSpinLock(ÏêÇé²Î¼ûwindows×ÔÐýËøÏµÁÐº¯Êý
+		//KeInitializeSpinLock(ï¿½ï¿½ï¿½ï¿½Î¼ï¿½windowsï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ïµï¿½Ðºï¿½ï¿½ï¿½
 		KeInitializeSpinLock(&(devExt->IoRequestspinLock));
 		KeInitializeEvent(&(devExt->IoInProgressEvent),NotificationEvent,FALSE);
 		devExt->TargetDeviceObject=pTargetDriver;
