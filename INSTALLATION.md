@@ -31,6 +31,8 @@ This package contains a Windows keyboard filter driver (`bdfilter.sys`) and its 
 2. Navigate to the directory containing `bdfilter.inf`
 3. Run: `pnputil /add-driver bdfilter.inf /install`
 
+**Note**: The INF file has been updated to be compatible with modern pnputil installation. It now includes proper manufacturer and device sections required by Windows driver installation.
+
 #### Method 3: Using Right-click Install
 1. Right-click on `bdfilter.inf`
 2. Select "Install" from the context menu
@@ -94,6 +96,9 @@ HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BF
 - Ensure you have Administrator privileges
 - Check if test signing is enabled for unsigned drivers
 - Verify the INF file syntax
+
+### "The required line was not found in the INF" error
+This error typically occurs when using pnputil with INF files that don't have proper manufacturer and device sections. The INF file has been updated to include these required sections for modern Windows driver installation.
 
 ### Driver won't start
 - Check Windows Event Log for error messages

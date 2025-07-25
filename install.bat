@@ -49,6 +49,10 @@ if %errorLevel% NEQ 0 (
 )
 
 echo.
+echo Driver package installed successfully!
+echo.
+
+echo.
 echo Driver installed successfully!
 echo.
 
