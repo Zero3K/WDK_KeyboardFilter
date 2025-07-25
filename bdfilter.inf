@@ -1,0 +1,83 @@
+;
+; bdfilter.inf - Installation file for Keyboard Filter Driver
+;
+; This INF installs a keyboard filter driver that hooks into the keyboard class driver
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=System
+ClassGuid={4D36E97D-E325-11CE-BFC1-08002BE10318}
+Provider=%ManufacturerName%
+CatalogFile=bdfilter.cat
+DriverVer=01/01/2024,1.0.0.0
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+bdfilter.sys = 1,,
+
+;;
+;; Default install sections
+;;
+
+[DefaultInstall]
+CopyFiles=Drivers_Dir
+AddReg=BdFilter_AddReg
+
+[DefaultInstall.Services]
+AddService=bdfilter,%SPSVCINST_ASSOCSERVICE%, bdfilter_Service_Inst
+
+;;
+;; Default uninstall sections
+;;
+
+[DefaultUninstall]
+DelFiles=Drivers_Dir
+DelReg=BdFilter_DelReg
+
+[DefaultUninstall.Services]
+DelService=bdfilter,0x200      ; Flags note to stop service first
+
+;;
+;; Registry sections
+;;
+
+[BdFilter_AddReg]
+HKLM,System\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318},UpperFilters,0x00010008,bdfilter
+
+[BdFilter_DelReg]
+HKLM,System\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318},UpperFilters,0x00018002,bdfilter
+
+;;
+;; Services Section
+;;
+
+[bdfilter_Service_Inst]
+DisplayName=%BdFilter.SVCDESC%
+ServiceType=1               ; SERVICE_KERNEL_DRIVER
+StartType=1                 ; SERVICE_SYSTEM_START
+ErrorControl=1              ; SERVICE_ERROR_NORMAL
+ServiceBinary=%12%\bdfilter.sys
+LoadOrderGroup = Keyboard Port
+
+;;
+;; Copy Files
+;;
+
+[Drivers_Dir]
+bdfilter.sys
+
+;;
+;; String Section
+;;
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="Keyboard Filter Driver"
+DiskName = "Keyboard Filter Driver Installation Disk"
+BdFilter.SVCDESC = "Keyboard Filter Driver Service"
