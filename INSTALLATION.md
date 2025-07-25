@@ -10,6 +10,21 @@ This package contains a Windows keyboard filter driver (`bdfilter.sys`) and its 
 - `sources` - Build configuration file
 - `makefile` - Build system file
 
+## Directory Structure
+
+When building with the Windows Driver Kit (WDK), files are organized as follows:
+
+**Source Directory (root):**
+- `bdfilter.inf` - Always remains here
+- `bdfilter.c`, `sources`, `makefile` - Source files
+
+**Build Output Directory:**
+- `objfre_win7_amd64/` - Windows 7 x64 retail build output
+- `objchk_win7_amd64/` - Windows 7 x64 debug build output
+- Contains: `bdfilter.sys`, `bdfilter.pdb`, and other compiled files
+
+**Important:** Installation scripts expect `bdfilter.inf` in the source directory and `bdfilter.sys` in the build directory.
+
 ## Installation Instructions
 
 ### Prerequisites
@@ -34,14 +49,17 @@ Then restart your computer.
 2. The script will automatically detect signing issues and guide you through the solution
 
 **For compiled drivers in build subdirectories:**
-1. Run `install.bat [build_directory]` as Administrator
-   - Example: `install.bat objfre_win7_amd64`
-   - Example: `install.bat x64\Release`
-2. The script will look for driver files in the specified subdirectory
+1. Navigate to the driver source directory (where `bdfilter.inf` is located)
+2. Run `install.bat [build_directory]` as Administrator
+   - Example: `install.bat objfre_win7_amd64` (looks for `bdfilter.sys` in `objfre_win7_amd64` subdirectory)
+   - Example: `install.bat objchk_win7_amd64` (looks for `bdfilter.sys` in `objchk_win7_amd64` subdirectory)
+3. The script will:
+   - Use `bdfilter.inf` from the current directory
+   - Use `bdfilter.sys` from the specified subdirectory
 
 **PowerShell Alternative:**
-- `PowerShell -ExecutionPolicy Bypass -File install.ps1`
-- `PowerShell -ExecutionPolicy Bypass -File install.ps1 objfre_win7_amd64`
+- `PowerShell -ExecutionPolicy Bypass -File install.ps1` (uses current directory)
+- `PowerShell -ExecutionPolicy Bypass -File install.ps1 objfre_win7_amd64` (uses build subdirectory)
 
 #### Method 2: Using Device Manager
 1. Open Device Manager as Administrator

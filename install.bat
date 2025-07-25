@@ -22,11 +22,9 @@ if %errorLevel% NEQ 0 (
 )
 
 echo Checking for required files...
-if not exist "%BUILD_DIR%\bdfilter.inf" (
-    echo ERROR: bdfilter.inf not found in %BUILD_DIR%!
-    echo Please ensure you've built the driver or specify the correct build directory.
-    echo Usage: install.bat [build_directory]
-    echo Example: install.bat objfre_win7_amd64
+if not exist "bdfilter.inf" (
+    echo ERROR: bdfilter.inf not found in current directory!
+    echo Please run this script from the driver source directory.
     pause
     exit /b 1
 )
@@ -47,7 +45,7 @@ echo Checking driver signature status...
 signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys" >nul 2>&1
 set DRIVER_SIGNED=%errorLevel%
 
-signtool verify /v /kp "%BUILD_DIR%\bdfilter.cat" >nul 2>&1
+signtool verify /v /kp "bdfilter.cat" >nul 2>&1
 set CATALOG_SIGNED=%errorLevel%
 
 if %DRIVER_SIGNED% NEQ 0 (
@@ -55,7 +53,7 @@ if %DRIVER_SIGNED% NEQ 0 (
 )
 
 if %CATALOG_SIGNED% NEQ 0 (
-    echo WARNING: Catalog %BUILD_DIR%\bdfilter.cat is not properly signed or missing
+    echo WARNING: Catalog bdfilter.cat is not properly signed or missing
 )
 
 if %DRIVER_SIGNED% NEQ 0 (
@@ -102,7 +100,7 @@ if %DRIVER_SIGNED% NEQ 0 (
 
 echo.
 echo Installing keyboard filter driver...
-pnputil /add-driver "%BUILD_DIR%\bdfilter.inf" /install
+pnputil /add-driver "bdfilter.inf" /install
 
 if %errorLevel% NEQ 0 (
     echo.

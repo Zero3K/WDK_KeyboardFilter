@@ -45,9 +45,11 @@ For a more proper signing approach, create a test certificate:
    ```cmd
    create_test_cert.bat objfre_win7_amd64
    ```
-   This script will:
+   **Important:** Run this script from the driver source directory (where `bdfilter.inf` is located). The script will:
+   - Look for `bdfilter.inf` in the current directory
+   - Look for `bdfilter.sys` in the specified build subdirectory (e.g., `objfre_win7_amd64`)
    - Create a test certificate
-   - Generate a catalog file (`bdfilter.cat`)
+   - Generate a catalog file (`bdfilter.cat`) in the current directory
    - Sign both the driver and catalog
 
 2. **Install the test certificate on target machines:**
@@ -113,9 +115,16 @@ PowerShell -ExecutionPolicy Bypass -File install.ps1 objfre_win7_amd64
 
 ### Script Behavior
 
-- **Without build directory parameter:** Scripts look for files in the current directory (`.`)
-- **With build directory parameter:** Scripts look for files in the specified subdirectory
-- **File verification:** Scripts verify that `bdfilter.sys` and `bdfilter.inf` exist in the target directory before proceeding
+**File Location Understanding:**
+- **`bdfilter.inf`** - Always remains in the source directory (current directory)
+- **`bdfilter.sys`** - Located in the build output directory when compiled with WDK
+
+**Script Parameter Usage:**
+- **Without build directory parameter:** Scripts look for `bdfilter.sys` in the current directory (`.`)
+- **With build directory parameter:** Scripts look for `bdfilter.sys` in the specified subdirectory (e.g., `objfre_win7_amd64`)
+- **File verification:** Scripts verify that:
+  - `bdfilter.inf` exists in the current directory (source directory)
+  - `bdfilter.sys` exists in the build directory (current or specified subdirectory)
 
 ## Files Created During Signing
 

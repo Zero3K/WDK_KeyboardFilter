@@ -33,11 +33,9 @@ if not exist "%BUILD_DIR%\bdfilter.sys" (
     exit /b 1
 )
 
-if not exist "%BUILD_DIR%\bdfilter.inf" (
-    echo ERROR: bdfilter.inf not found in %BUILD_DIR%!
-    echo Please ensure you've built the driver or specify the correct build directory.
-    echo Usage: sign_driver.bat [build_directory]
-    echo Example: sign_driver.bat objfre_win7_amd64
+if not exist "bdfilter.inf" (
+    echo ERROR: bdfilter.inf not found in current directory!
+    echo Please run this script from the driver source directory.
     pause
     exit /b 1
 )
@@ -91,10 +89,10 @@ if /i "%CERT_EXT%"==".pfx" (
 
 echo.
 echo Generating catalog file...
-inf2cat /driver:%BUILD_DIR% /os:7_X86,7_X64,8_X86,8_X64,10_X86,10_X64
+inf2cat /driver:. /os:7_X86,7_X64,8_X86,8_X64,10_X86,10_X64
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to generate catalog file
-    echo Make sure bdfilter.inf is present and valid in %BUILD_DIR%
+    echo Make sure bdfilter.inf is present and valid in current directory
     pause
     exit /b 1
 )
@@ -110,9 +108,9 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Signing catalog file...
-signtool sign /v %SIGN_PARAMS% /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.cat"
+signtool sign /v %SIGN_PARAMS% /t http://timestamp.digicert.com "bdfilter.cat"
 if %errorLevel% NEQ 0 (
-    echo ERROR: Failed to sign %BUILD_DIR%\bdfilter.cat
+    echo ERROR: Failed to sign bdfilter.cat
     pause
     exit /b 1
 )
@@ -124,7 +122,7 @@ if %errorLevel% NEQ 0 (
     echo WARNING: Driver signature verification failed
 )
 
-signtool verify /v /kp "%BUILD_DIR%\bdfilter.cat"
+signtool verify /v /kp "bdfilter.cat"
 if %errorLevel% NEQ 0 (
     echo WARNING: Catalog signature verification failed
 )
@@ -136,7 +134,7 @@ echo ============================================
 echo.
 echo Signed files:
 echo - %BUILD_DIR%\bdfilter.sys (Signed driver)
-echo - %BUILD_DIR%\bdfilter.cat (Signed catalog file)
+echo - bdfilter.cat (Signed catalog file)
 echo.
 echo If using a test certificate, ensure on target machine:
 echo 1. Install the certificate to TrustedPublisher and Root stores, OR

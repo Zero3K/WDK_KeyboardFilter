@@ -22,11 +22,9 @@ Write-Host "Build directory: $BuildDirectory" -ForegroundColor Yellow
 Write-Host
 
 # Check for required files
-if (-not (Test-Path "$BuildDirectory\bdfilter.inf")) {
-    Write-Host "ERROR: bdfilter.inf not found in $BuildDirectory!" -ForegroundColor Red
-    Write-Host "Please ensure you've built the driver or specify the correct build directory." -ForegroundColor Yellow
-    Write-Host "Usage: install.ps1 [build_directory]" -ForegroundColor Yellow
-    Write-Host "Example: install.ps1 objfre_win7_amd64" -ForegroundColor Yellow
+if (-not (Test-Path "bdfilter.inf")) {
+    Write-Host "ERROR: bdfilter.inf not found in current directory!" -ForegroundColor Red
+    Write-Host "Please run this script from the driver source directory." -ForegroundColor Yellow
     Read-Host "Press Enter to exit"
     exit 1
 }
@@ -61,9 +59,9 @@ try {
     Write-Host "Driver signature: CANNOT VERIFY" -ForegroundColor Red
 }
 
-if (Test-Path "$BuildDirectory\bdfilter.cat") {
+if (Test-Path "bdfilter.cat") {
     try {
-        $result = & signtool verify /v /kp "$BuildDirectory\bdfilter.cat" 2>&1
+        $result = & signtool verify /v /kp "bdfilter.cat" 2>&1
         if ($LASTEXITCODE -eq 0) {
             $catalogSigned = $true
             Write-Host "Catalog signature: OK" -ForegroundColor Green
@@ -137,7 +135,7 @@ Write-Host
 Write-Host "Installing keyboard filter driver..." -ForegroundColor Yellow
 
 try {
-    $installResult = & pnputil /add-driver "$BuildDirectory\bdfilter.inf" /install 2>&1
+    $installResult = & pnputil /add-driver "bdfilter.inf" /install 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Driver package installed successfully!" -ForegroundColor Green
     } else {

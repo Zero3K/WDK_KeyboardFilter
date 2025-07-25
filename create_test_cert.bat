@@ -64,11 +64,9 @@ if not exist "%BUILD_DIR%\bdfilter.sys" (
     exit /b 1
 )
 
-if not exist "%BUILD_DIR%\bdfilter.inf" (
-    echo ERROR: bdfilter.inf not found in %BUILD_DIR%!
-    echo Please ensure you've built the driver or specify the correct build directory.
-    echo Usage: create_test_cert.bat [build_directory]
-    echo Example: create_test_cert.bat objfre_win7_amd64
+if not exist "bdfilter.inf" (
+    echo ERROR: bdfilter.inf not found in current directory!
+    echo Please run this script from the driver source directory.
     pause
     exit /b 1
 )
@@ -89,10 +87,10 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Generating catalog file...
-inf2cat /driver:%BUILD_DIR% /os:7_X86,7_X64,8_X86,8_X64,10_X86,10_X64
+inf2cat /driver:. /os:7_X86,7_X64,8_X86,8_X64,10_X86,10_X64
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to generate catalog file
-    echo Make sure bdfilter.inf is present and valid in %BUILD_DIR%
+    echo Make sure bdfilter.inf is present and valid in current directory
     pause
     exit /b 1
 )
@@ -106,9 +104,9 @@ if %errorLevel% NEQ 0 (
     exit /b 1
 )
 
-signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.cat"
+signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /t http://timestamp.digicert.com "bdfilter.cat"
 if %errorLevel% NEQ 0 (
-    echo ERROR: Failed to sign %BUILD_DIR%\bdfilter.cat
+    echo ERROR: Failed to sign bdfilter.cat
     pause
     exit /b 1
 )
@@ -116,7 +114,7 @@ if %errorLevel% NEQ 0 (
 echo.
 echo Verifying signatures...
 signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys"
-signtool verify /v /kp "%BUILD_DIR%\bdfilter.cat"
+signtool verify /v /kp "bdfilter.cat"
 
 echo.
 echo ============================================
@@ -125,7 +123,7 @@ echo ============================================
 echo.
 echo Files created:
 echo - %CERT_NAME%.cer (Test certificate for installation)
-echo - %BUILD_DIR%\bdfilter.cat (Signed catalog file)
+echo - bdfilter.cat (Signed catalog file)
 echo - %BUILD_DIR%\bdfilter.sys (Signed driver)
 echo.
 echo Next steps:
