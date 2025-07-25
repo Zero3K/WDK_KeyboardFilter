@@ -1,0 +1,24 @@
+# Build artifacts
+*.obj
+*.lib
+*.exp
+*.map
+*.pdb
+
+# Driver signing artifacts
+*.cat
+*.cer
+*.pfx
+*.pvk
+
+# Temporary files
+*.tmp
+*~
+*.bak
+
+# Windows specific
+Thumbs.db
+Desktop.ini
+
+# Test mode watermark screenshots
+testmode_*.png

@@ -15,25 +15,37 @@ This package contains a Windows keyboard filter driver (`bdfilter.sys`) and its 
 ### Prerequisites
 - Windows operating system (Windows XP or later)
 - Administrator privileges
-- Test signing enabled (for unsigned drivers)
+- **For Windows 7 x64 and later**: Driver must be digitally signed OR test signing enabled
+  - See `DRIVER_SIGNING.md` for detailed signing instructions
+  - Quick fix: Run `bcdedit /set testsigning on` as Administrator, then reboot
 
 ### Installing the Driver
 
-#### Method 1: Using Device Manager
+**IMPORTANT for Windows 7 x64 and later:** Before installing, you must address driver signing requirements. See `DRIVER_SIGNING.md` for complete instructions, or run:
+```cmd
+bcdedit /set testsigning on
+```
+Then restart your computer.
+
+#### Method 1: Automated Installation (Recommended)
+1. Run `install.bat` as Administrator
+2. The script will automatically detect signing issues and guide you through the solution
+
+#### Method 2: Using Device Manager
 1. Open Device Manager as Administrator
 2. Right-click on any device and select "Add legacy hardware"
 3. Choose "Install the hardware that I manually select from a list"
 4. Select "Have Disk..." and browse to the `bdfilter.inf` file
 5. Follow the installation wizard
 
-#### Method 2: Using Command Line
+#### Method 3: Using Command Line
 1. Open Command Prompt as Administrator
 2. Navigate to the directory containing `bdfilter.inf`
 3. Run: `pnputil /add-driver bdfilter.inf /install`
 
 **Note**: The INF file has been updated to be compatible with modern pnputil installation. It now includes proper manufacturer and device sections required by Windows driver installation.
 
-#### Method 3: Using Right-click Install
+#### Method 4: Using Right-click Install
 1. Right-click on `bdfilter.inf`
 2. Select "Install" from the context menu
 3. Confirm the installation when prompted
@@ -91,6 +103,29 @@ HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BF
 ```
 
 ## Troubleshooting
+
+### Driver Signing Issues (Windows 7 x64 and later)
+
+**"Code integrity determined that the image hash of a file is not valid"**
+
+This error occurs when Windows detects an unsigned or improperly signed driver. Solutions:
+
+1. **Enable test signing mode (Quick fix):**
+   ```cmd
+   bcdedit /set testsigning on
+   ```
+   Then restart your computer.
+
+2. **Sign the driver properly:**
+   - Run `create_test_cert.bat` to create and apply a test certificate
+   - Or run `sign_driver.bat` if you have an existing certificate
+   - See `DRIVER_SIGNING.md` for detailed instructions
+
+3. **Install a test certificate:**
+   ```cmd
+   certmgr -add YourTestCert.cer -s -r localMachine TrustedPublisher
+   certmgr -add YourTestCert.cer -s -r localMachine root
+   ```
 
 ### Driver won't install
 - Ensure you have Administrator privileges
