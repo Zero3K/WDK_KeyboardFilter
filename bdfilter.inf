@@ -22,7 +22,35 @@ DefaultDestDir = 12
 bdfilter.sys = 1,,
 
 ;;
-;; Default install sections
+;; Manufacturer section
+;;
+
+[Manufacturer]
+%ManufacturerName%=Standard,NTx86,NTamd64
+
+;;
+;; Device identification
+;;
+
+[Standard.NTx86]
+%BdFilter.DeviceDesc%=BdFilter_Device, Root\BdFilter
+
+[Standard.NTamd64]
+%BdFilter.DeviceDesc%=BdFilter_Device, Root\BdFilter
+
+;;
+;; Install sections
+;;
+
+[BdFilter_Device.NT]
+CopyFiles=Drivers_Dir
+AddReg=BdFilter_AddReg
+
+[BdFilter_Device.NT.Services]
+AddService=bdfilter,%SPSVCINST_ASSOCSERVICE%, bdfilter_Service_Inst
+
+;;
+;; Default install sections (for legacy compatibility)
 ;;
 
 [DefaultInstall]
@@ -81,3 +109,4 @@ SPSVCINST_ASSOCSERVICE= 0x00000002
 ManufacturerName="Keyboard Filter Driver"
 DiskName = "Keyboard Filter Driver Installation Disk"
 BdFilter.SVCDESC = "Keyboard Filter Driver Service"
+BdFilter.DeviceDesc = "Keyboard Filter Driver"
