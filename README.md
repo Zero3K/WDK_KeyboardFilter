@@ -7,11 +7,30 @@ WinXp程序(64位下编译会不能使用,Test模式也不行)
 
 ## Installation
 
+**⚠️ IMPORTANT for Windows 7 x64 and later:** This driver requires proper digital signing or test signing mode enabled. See `DRIVER_SIGNING.md` for complete instructions.
+
+**Quick fix for testing:**
+```cmd
+bcdedit /set testsigning on
+```
+(Run as Administrator, then reboot)
+
 This repository now includes an INF file for easy driver installation:
 
 - `bdfilter.inf` - Windows driver installation file
 - `install.bat` - Automated installation script (run as Administrator)
 - `uninstall.bat` - Automated uninstallation script (run as Administrator)
 - `INSTALLATION.md` - Detailed installation instructions
+- `DRIVER_SIGNING.md` - Driver signing guide for Windows 7 x64 and later
+- `create_test_cert.bat` - Creates test certificate and signs driver
+- `sign_driver.bat` - Signs driver with existing certificate
 
-Quick install: Run `install.bat` as Administrator
+**Installation for compiled drivers:**
+- If using root directory: `install.bat`
+- If using build output: `install.bat objfre_win7_amd64` (replace with your build directory)
+
+**Signing for compiled drivers:**
+- If using root directory: `create_test_cert.bat` or `sign_driver.bat`
+- If using build output: `create_test_cert.bat objfre_win7_amd64` or `sign_driver.bat objfre_win7_amd64`
+
+Quick install: Run `install.bat` as Administrator (or `install.bat [build_dir]` for compiled drivers)
