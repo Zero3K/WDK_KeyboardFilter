@@ -1,7 +1,9 @@
 # PowerShell Driver Installation Script with Signing Support
-# Run as Administrator: PowerShell -ExecutionPolicy Bypass -File install.ps1
+# Run as Administrator: PowerShell -ExecutionPolicy Bypass -File install.ps1 [build_directory]
+# Example: PowerShell -ExecutionPolicy Bypass -File install.ps1 objfre_win7_amd64
 
 param(
+    [string]$BuildDirectory = ".",
     [switch]$EnableTestSigning,
     [switch]$Force
 )
@@ -16,17 +18,24 @@ if (-NOT ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdent
 
 Write-Host "Keyboard Filter Driver Installation Script (PowerShell)" -ForegroundColor Green
 Write-Host "========================================================" -ForegroundColor Green
+Write-Host "Build directory: $BuildDirectory" -ForegroundColor Yellow
 Write-Host
 
 # Check for required files
-if (-not (Test-Path "bdfilter.inf")) {
-    Write-Host "ERROR: bdfilter.inf not found!" -ForegroundColor Red
+if (-not (Test-Path "$BuildDirectory\bdfilter.inf")) {
+    Write-Host "ERROR: bdfilter.inf not found in $BuildDirectory!" -ForegroundColor Red
+    Write-Host "Please ensure you've built the driver or specify the correct build directory." -ForegroundColor Yellow
+    Write-Host "Usage: install.ps1 [build_directory]" -ForegroundColor Yellow
+    Write-Host "Example: install.ps1 objfre_win7_amd64" -ForegroundColor Yellow
     Read-Host "Press Enter to exit"
     exit 1
 }
 
-if (-not (Test-Path "bdfilter.sys")) {
-    Write-Host "ERROR: bdfilter.sys not found!" -ForegroundColor Red
+if (-not (Test-Path "$BuildDirectory\bdfilter.sys")) {
+    Write-Host "ERROR: bdfilter.sys not found in $BuildDirectory!" -ForegroundColor Red
+    Write-Host "Please ensure you've built the driver or specify the correct build directory." -ForegroundColor Yellow
+    Write-Host "Usage: install.ps1 [build_directory]" -ForegroundColor Yellow
+    Write-Host "Example: install.ps1 objfre_win7_amd64" -ForegroundColor Yellow
     Read-Host "Press Enter to exit"
     exit 1
 }
@@ -41,7 +50,7 @@ $driverSigned = $false
 $catalogSigned = $false
 
 try {
-    $result = & signtool verify /v /kp bdfilter.sys 2>&1
+    $result = & signtool verify /v /kp "$BuildDirectory\bdfilter.sys" 2>&1
     if ($LASTEXITCODE -eq 0) {
         $driverSigned = $true
         Write-Host "Driver signature: OK" -ForegroundColor Green
@@ -52,9 +61,9 @@ try {
     Write-Host "Driver signature: CANNOT VERIFY" -ForegroundColor Red
 }
 
-if (Test-Path "bdfilter.cat") {
+if (Test-Path "$BuildDirectory\bdfilter.cat") {
     try {
-        $result = & signtool verify /v /kp bdfilter.cat 2>&1
+        $result = & signtool verify /v /kp "$BuildDirectory\bdfilter.cat" 2>&1
         if ($LASTEXITCODE -eq 0) {
             $catalogSigned = $true
             Write-Host "Catalog signature: OK" -ForegroundColor Green
@@ -81,7 +90,7 @@ if (-not $driverSigned -and -not $Force) {
     Write-Host "   (requires reboot)" -ForegroundColor Gray
     Write-Host
     Write-Host "2. Sign the driver with a test certificate:" -ForegroundColor Cyan
-    Write-Host "   Run create_test_cert.bat or sign_driver.bat" -ForegroundColor Gray
+    Write-Host "   Run create_test_cert.bat $BuildDirectory or sign_driver.bat $BuildDirectory" -ForegroundColor Gray
     Write-Host
     Write-Host "3. Install a test certificate if you have one" -ForegroundColor Cyan
     Write-Host
@@ -128,7 +137,7 @@ Write-Host
 Write-Host "Installing keyboard filter driver..." -ForegroundColor Yellow
 
 try {
-    $installResult = & pnputil /add-driver bdfilter.inf /install 2>&1
+    $installResult = & pnputil /add-driver "$BuildDirectory\bdfilter.inf" /install 2>&1
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Driver package installed successfully!" -ForegroundColor Green
     } else {
@@ -142,7 +151,7 @@ try {
         Write-Host "   (then reboot and try again)" -ForegroundColor Gray
         Write-Host
         Write-Host "2. Sign the driver properly:" -ForegroundColor Cyan
-        Write-Host "   Use create_test_cert.bat or sign_driver.bat" -ForegroundColor Gray
+        Write-Host "   Use create_test_cert.bat $BuildDirectory or sign_driver.bat $BuildDirectory" -ForegroundColor Gray
         Write-Host
         Write-Host "3. Install test certificate to trusted stores" -ForegroundColor Cyan
         Write-Host

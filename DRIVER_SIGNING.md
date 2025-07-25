@@ -41,6 +41,10 @@ For a more proper signing approach, create a test certificate:
    ```cmd
    create_test_cert.bat
    ```
+   **For compiled drivers in build subdirectories:**
+   ```cmd
+   create_test_cert.bat objfre_win7_amd64
+   ```
    This script will:
    - Create a test certificate
    - Generate a catalog file (`bdfilter.cat`)
@@ -52,7 +56,7 @@ For a more proper signing approach, create a test certificate:
    certmgr -add BdFilterTestCert.cer -s -r localMachine root
    ```
 
-3. **Install the driver** using `install.bat`
+3. **Install the driver** using `install.bat` (or `install.bat [build_directory]`)
 
 ### Option 3: Sign with an Existing Certificate
 
@@ -62,10 +66,56 @@ If you have an existing code signing certificate:
    ```cmd
    sign_driver.bat
    ```
+   **For compiled drivers in build subdirectories:**
+   ```cmd
+   sign_driver.bat objfre_win7_amd64
+   ```
    This will prompt you for your certificate details and sign the driver.
 
 2. **Install the certificate** (if using a test certificate)
-3. **Install the driver** using `install.bat`
+3. **Install the driver** using `install.bat` (or `install.bat [build_directory]`)
+
+## Working with WDK Build Output Directories
+
+When you build the driver using the Windows Driver Kit (WDK), the compiled output goes to subdirectories based on your build configuration:
+
+### Common WDK Build Directory Patterns
+
+**Windows 7 DDK/WDK Build Environment:**
+- `objfre_win7_x86` - Windows 7 x86 free/retail build
+- `objfre_win7_amd64` - Windows 7 x64 free/retail build  
+- `objchk_win7_x86` - Windows 7 x86 checked/debug build
+- `objchk_win7_amd64` - Windows 7 x64 checked/debug build
+
+**Modern WDK/Visual Studio Build Environment:**
+- `x64\Debug\` - x64 debug build
+- `x64\Release\` - x64 release build
+- `x86\Debug\` - x86 debug build
+- `x86\Release\` - x86 release build
+
+### Using Scripts with Build Directories
+
+All signing and installation scripts accept an optional build directory parameter:
+
+```cmd
+# Sign driver in specific build directory
+create_test_cert.bat objfre_win7_amd64
+sign_driver.bat objfre_win7_amd64
+
+# Install driver from specific build directory  
+install.bat objfre_win7_amd64
+```
+
+```powershell
+# PowerShell installation with build directory
+PowerShell -ExecutionPolicy Bypass -File install.ps1 objfre_win7_amd64
+```
+
+### Script Behavior
+
+- **Without build directory parameter:** Scripts look for files in the current directory (`.`)
+- **With build directory parameter:** Scripts look for files in the specified subdirectory
+- **File verification:** Scripts verify that `bdfilter.sys` and `bdfilter.inf` exist in the target directory before proceeding
 
 ## Files Created During Signing
 
@@ -86,12 +136,17 @@ This catalog file must be present and properly signed for the driver to install 
 
 ### "The required line was not found in the INF" Error
 - This usually means the catalog file is missing or improperly generated
-- Run `create_test_cert.bat` or `sign_driver.bat` to generate the catalog
+- Run `create_test_cert.bat [build_dir]` or `sign_driver.bat [build_dir]` to generate the catalog
 
 ### "Driver signature verification failed" Warning
 - The driver signature might be corrupt or use an untrusted certificate
 - Verify the certificate is installed in the correct stores
 - Enable test signing mode as a fallback
+
+### "bdfilter.sys not found" Error
+- Ensure you've specified the correct build directory path
+- Check that the driver was successfully compiled to the expected output directory
+- Verify the build directory contains both `bdfilter.sys` and `bdfilter.inf`
 
 ### "Access Denied" During Certificate Installation
 - Ensure you're running as Administrator

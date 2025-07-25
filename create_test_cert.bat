@@ -2,10 +2,16 @@
 :: Test Certificate Creation and Driver Signing Script
 :: Run this on a Windows machine with Windows SDK/WDK installed
 :: This script must be run as Administrator
+:: Usage: create_test_cert.bat [build_directory]
+:: Example: create_test_cert.bat objfre_win7_amd64
+
+set BUILD_DIR=%~1
+if "%BUILD_DIR%"=="" set BUILD_DIR=.
 
 echo ============================================
 echo  Driver Test Certificate Creation Script
 echo ============================================
+echo Build directory: %BUILD_DIR%
 echo.
 
 :: Check for administrator privileges
@@ -48,6 +54,28 @@ if %errorLevel% NEQ 0 (
 echo All required tools found.
 echo.
 
+:: Check if required driver files exist
+if not exist "%BUILD_DIR%\bdfilter.sys" (
+    echo ERROR: bdfilter.sys not found in %BUILD_DIR%!
+    echo Please ensure you've built the driver or specify the correct build directory.
+    echo Usage: create_test_cert.bat [build_directory]
+    echo Example: create_test_cert.bat objfre_win7_amd64
+    pause
+    exit /b 1
+)
+
+if not exist "%BUILD_DIR%\bdfilter.inf" (
+    echo ERROR: bdfilter.inf not found in %BUILD_DIR%!
+    echo Please ensure you've built the driver or specify the correct build directory.
+    echo Usage: create_test_cert.bat [build_directory]
+    echo Example: create_test_cert.bat objfre_win7_amd64
+    pause
+    exit /b 1
+)
+
+echo Required driver files found.
+echo.
+
 set CERT_NAME=BdFilterTestCert
 set STORE_NAME=PrivateCertStore
 
@@ -61,34 +89,34 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Generating catalog file...
-inf2cat /driver:. /os:7_X86,7_X64,8_X86,8_X64,10_X86,10_X64
+inf2cat /driver:%BUILD_DIR% /os:7_X86,7_X64,8_X86,8_X64,10_X86,10_X64
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to generate catalog file
-    echo Make sure bdfilter.inf is present and valid
+    echo Make sure bdfilter.inf is present and valid in %BUILD_DIR%
     pause
     exit /b 1
 )
 
 echo.
 echo Signing driver files...
-signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /t http://timestamp.digicert.com bdfilter.sys
+signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.sys"
 if %errorLevel% NEQ 0 (
-    echo ERROR: Failed to sign bdfilter.sys
+    echo ERROR: Failed to sign %BUILD_DIR%\bdfilter.sys
     pause
     exit /b 1
 )
 
-signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /t http://timestamp.digicert.com bdfilter.cat
+signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.cat"
 if %errorLevel% NEQ 0 (
-    echo ERROR: Failed to sign bdfilter.cat
+    echo ERROR: Failed to sign %BUILD_DIR%\bdfilter.cat
     pause
     exit /b 1
 )
 
 echo.
 echo Verifying signatures...
-signtool verify /v /kp bdfilter.sys
-signtool verify /v /kp bdfilter.cat
+signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys"
+signtool verify /v /kp "%BUILD_DIR%\bdfilter.cat"
 
 echo.
 echo ============================================
@@ -97,8 +125,8 @@ echo ============================================
 echo.
 echo Files created:
 echo - %CERT_NAME%.cer (Test certificate for installation)
-echo - bdfilter.cat (Signed catalog file)
-echo - bdfilter.sys (Signed driver)
+echo - %BUILD_DIR%\bdfilter.cat (Signed catalog file)
+echo - %BUILD_DIR%\bdfilter.sys (Signed driver)
 echo.
 echo Next steps:
 echo 1. Install the test certificate on target machine:
@@ -109,6 +137,6 @@ echo 2. OR enable test signing mode on target machine:
 echo    bcdedit /set testsigning on
 echo    (then reboot)
 echo.
-echo 3. Run install.bat to install the driver
+echo 3. Run install.bat %BUILD_DIR% to install the driver
 echo.
 pause

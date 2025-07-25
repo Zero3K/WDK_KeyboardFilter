@@ -2,10 +2,16 @@
 :: Driver Signing Script for existing certificates
 :: Run this on a Windows machine with Windows SDK/WDK installed
 :: This script must be run as Administrator
+:: Usage: sign_driver.bat [build_directory]
+:: Example: sign_driver.bat objfre_win7_amd64
+
+set BUILD_DIR=%~1
+if "%BUILD_DIR%"=="" set BUILD_DIR=.
 
 echo ============================================
 echo      Driver Signing Script
 echo ============================================
+echo Build directory: %BUILD_DIR%
 echo.
 
 :: Check for administrator privileges
@@ -18,14 +24,20 @@ if %errorLevel% NEQ 0 (
 )
 
 :: Check if required files exist
-if not exist "bdfilter.sys" (
-    echo ERROR: bdfilter.sys not found!
+if not exist "%BUILD_DIR%\bdfilter.sys" (
+    echo ERROR: bdfilter.sys not found in %BUILD_DIR%!
+    echo Please ensure you've built the driver or specify the correct build directory.
+    echo Usage: sign_driver.bat [build_directory]
+    echo Example: sign_driver.bat objfre_win7_amd64
     pause
     exit /b 1
 )
 
-if not exist "bdfilter.inf" (
-    echo ERROR: bdfilter.inf not found!
+if not exist "%BUILD_DIR%\bdfilter.inf" (
+    echo ERROR: bdfilter.inf not found in %BUILD_DIR%!
+    echo Please ensure you've built the driver or specify the correct build directory.
+    echo Usage: sign_driver.bat [build_directory]
+    echo Example: sign_driver.bat objfre_win7_amd64
     pause
     exit /b 1
 )
@@ -79,40 +91,40 @@ if /i "%CERT_EXT%"==".pfx" (
 
 echo.
 echo Generating catalog file...
-inf2cat /driver:. /os:7_X86,7_X64,8_X86,8_X64,10_X86,10_X64
+inf2cat /driver:%BUILD_DIR% /os:7_X86,7_X64,8_X86,8_X64,10_X86,10_X64
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to generate catalog file
-    echo Make sure bdfilter.inf is present and valid
+    echo Make sure bdfilter.inf is present and valid in %BUILD_DIR%
     pause
     exit /b 1
 )
 
 echo.
 echo Signing driver file...
-signtool sign /v %SIGN_PARAMS% /t http://timestamp.digicert.com bdfilter.sys
+signtool sign /v %SIGN_PARAMS% /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.sys"
 if %errorLevel% NEQ 0 (
-    echo ERROR: Failed to sign bdfilter.sys
+    echo ERROR: Failed to sign %BUILD_DIR%\bdfilter.sys
     pause
     exit /b 1
 )
 
 echo.
 echo Signing catalog file...
-signtool sign /v %SIGN_PARAMS% /t http://timestamp.digicert.com bdfilter.cat
+signtool sign /v %SIGN_PARAMS% /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.cat"
 if %errorLevel% NEQ 0 (
-    echo ERROR: Failed to sign bdfilter.cat
+    echo ERROR: Failed to sign %BUILD_DIR%\bdfilter.cat
     pause
     exit /b 1
 )
 
 echo.
 echo Verifying signatures...
-signtool verify /v /kp bdfilter.sys
+signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys"
 if %errorLevel% NEQ 0 (
     echo WARNING: Driver signature verification failed
 )
 
-signtool verify /v /kp bdfilter.cat
+signtool verify /v /kp "%BUILD_DIR%\bdfilter.cat"
 if %errorLevel% NEQ 0 (
     echo WARNING: Catalog signature verification failed
 )
@@ -123,13 +135,13 @@ echo        Driver Signing Complete!
 echo ============================================
 echo.
 echo Signed files:
-echo - bdfilter.sys (Signed driver)
-echo - bdfilter.cat (Signed catalog file)
+echo - %BUILD_DIR%\bdfilter.sys (Signed driver)
+echo - %BUILD_DIR%\bdfilter.cat (Signed catalog file)
 echo.
 echo If using a test certificate, ensure on target machine:
 echo 1. Install the certificate to TrustedPublisher and Root stores, OR
 echo 2. Enable test signing mode: bcdedit /set testsigning on
 echo.
-echo Then run install.bat to install the driver.
+echo Then run install.bat %BUILD_DIR% to install the driver.
 echo.
 pause

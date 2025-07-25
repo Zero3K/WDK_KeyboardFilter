@@ -28,8 +28,20 @@ bcdedit /set testsigning on
 Then restart your computer.
 
 #### Method 1: Automated Installation (Recommended)
+
+**For drivers in root directory:**
 1. Run `install.bat` as Administrator
 2. The script will automatically detect signing issues and guide you through the solution
+
+**For compiled drivers in build subdirectories:**
+1. Run `install.bat [build_directory]` as Administrator
+   - Example: `install.bat objfre_win7_amd64`
+   - Example: `install.bat x64\Release`
+2. The script will look for driver files in the specified subdirectory
+
+**PowerShell Alternative:**
+- `PowerShell -ExecutionPolicy Bypass -File install.ps1`
+- `PowerShell -ExecutionPolicy Bypass -File install.ps1 objfre_win7_amd64`
 
 #### Method 2: Using Device Manager
 1. Open Device Manager as Administrator

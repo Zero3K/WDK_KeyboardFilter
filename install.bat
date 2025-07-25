@@ -1,9 +1,15 @@
 @echo off
 :: Keyboard Filter Driver Installation Script
 :: Run as Administrator
+:: Usage: install.bat [build_directory]
+:: Example: install.bat objfre_win7_amd64
+
+set BUILD_DIR=%~1
+if "%BUILD_DIR%"=="" set BUILD_DIR=.
 
 echo Keyboard Filter Driver Installation Script
 echo ==========================================
+echo Build directory: %BUILD_DIR%
 echo.
 
 :: Check for administrator privileges
@@ -16,14 +22,20 @@ if %errorLevel% NEQ 0 (
 )
 
 echo Checking for required files...
-if not exist "bdfilter.inf" (
-    echo ERROR: bdfilter.inf not found!
+if not exist "%BUILD_DIR%\bdfilter.inf" (
+    echo ERROR: bdfilter.inf not found in %BUILD_DIR%!
+    echo Please ensure you've built the driver or specify the correct build directory.
+    echo Usage: install.bat [build_directory]
+    echo Example: install.bat objfre_win7_amd64
     pause
     exit /b 1
 )
 
-if not exist "bdfilter.sys" (
-    echo ERROR: bdfilter.sys not found!
+if not exist "%BUILD_DIR%\bdfilter.sys" (
+    echo ERROR: bdfilter.sys not found in %BUILD_DIR%!
+    echo Please ensure you've built the driver or specify the correct build directory.
+    echo Usage: install.bat [build_directory] 
+    echo Example: install.bat objfre_win7_amd64
     pause
     exit /b 1
 )
@@ -32,18 +44,18 @@ echo Files found successfully.
 echo.
 
 echo Checking driver signature status...
-signtool verify /v /kp bdfilter.sys >nul 2>&1
+signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys" >nul 2>&1
 set DRIVER_SIGNED=%errorLevel%
 
-signtool verify /v /kp bdfilter.cat >nul 2>&1
+signtool verify /v /kp "%BUILD_DIR%\bdfilter.cat" >nul 2>&1
 set CATALOG_SIGNED=%errorLevel%
 
 if %DRIVER_SIGNED% NEQ 0 (
-    echo WARNING: Driver bdfilter.sys is not properly signed
+    echo WARNING: Driver %BUILD_DIR%\bdfilter.sys is not properly signed
 )
 
 if %CATALOG_SIGNED% NEQ 0 (
-    echo WARNING: Catalog bdfilter.cat is not properly signed or missing
+    echo WARNING: Catalog %BUILD_DIR%\bdfilter.cat is not properly signed or missing
 )
 
 if %DRIVER_SIGNED% NEQ 0 (
@@ -58,7 +70,7 @@ if %DRIVER_SIGNED% NEQ 0 (
     echo    ^(requires reboot^)
     echo.
     echo 2. Sign the driver with a test certificate:
-    echo    Run create_test_cert.bat or sign_driver.bat
+    echo    Run create_test_cert.bat %BUILD_DIR% or sign_driver.bat %BUILD_DIR%
     echo.
     echo 3. Install a test certificate if you have one:
     echo    certmgr -add YourTestCert.cer -s -r localMachine TrustedPublisher
@@ -90,7 +102,7 @@ if %DRIVER_SIGNED% NEQ 0 (
 
 echo.
 echo Installing keyboard filter driver...
-pnputil /add-driver bdfilter.inf /install
+pnputil /add-driver "%BUILD_DIR%\bdfilter.inf" /install
 
 if %errorLevel% NEQ 0 (
     echo.
@@ -103,7 +115,7 @@ if %errorLevel% NEQ 0 (
     echo    ^(then reboot and try again^)
     echo.
     echo 2. Sign the driver properly:
-    echo    Use create_test_cert.bat or sign_driver.bat
+    echo    Use create_test_cert.bat %BUILD_DIR% or sign_driver.bat %BUILD_DIR%
     echo.
     echo 3. Install test certificate to trusted stores:
     echo    certmgr -add TestCert.cer -s -r localMachine TrustedPublisher

@@ -25,4 +25,12 @@ This repository now includes an INF file for easy driver installation:
 - `create_test_cert.bat` - Creates test certificate and signs driver
 - `sign_driver.bat` - Signs driver with existing certificate
 
-Quick install: Run `install.bat` as Administrator
+**Installation for compiled drivers:**
+- If using root directory: `install.bat`
+- If using build output: `install.bat objfre_win7_amd64` (replace with your build directory)
+
+**Signing for compiled drivers:**
+- If using root directory: `create_test_cert.bat` or `sign_driver.bat`
+- If using build output: `create_test_cert.bat objfre_win7_amd64` or `sign_driver.bat objfre_win7_amd64`
+
+Quick install: Run `install.bat` as Administrator (or `install.bat [build_dir]` for compiled drivers)
