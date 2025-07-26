@@ -5,13 +5,35 @@ This project now includes Visual Studio 2019 solution and project files for buil
 ## Prerequisites
 
 1. **Visual Studio 2019** (Community, Professional, or Enterprise)
-2. **Windows Driver Kit (WDK)** compatible with Visual Studio 2019
-   - Download from Microsoft: https://docs.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk
+2. **Windows Driver Development Kit (DDK)** - Legacy DDK (not WDK)
+   - The project requires the legacy Windows DDK (Driver Development Kit) 
+   - Common installation paths: `C:\WINDDK\7600.16385.1\` or similar
+   - **Important**: You must set the `DDKROOT` environment variable to point to your DDK installation directory
+
+## Environment Setup
+
+### Setting the DDKROOT Environment Variable
+
+Before building, you must set the `DDKROOT` environment variable to point to your DDK installation:
+
+**Method 1: System Environment Variables**
+1. Right-click **This PC** → **Properties** → **Advanced system settings** → **Environment Variables**
+2. Under **System variables**, click **New**
+3. Variable name: `DDKROOT`
+4. Variable value: Path to your DDK installation (e.g., `C:\WINDDK\7600.16385.1`)
+5. Click **OK** and restart Visual Studio
+
+**Method 2: Visual Studio Project Settings**
+1. Open the project in Visual Studio
+2. Right-click the project → **Properties**
+3. Go to **Configuration Properties** → **Build Events** → **Pre-Build Event**
+4. Add: `set DDKROOT=C:\WINDDK\7600.16385.1` (adjust path as needed)
 
 ## Opening the Project
 
-1. Double-click `bdfilter.sln` to open in Visual Studio 2019
-2. Or open Visual Studio 2019 and select **File → Open → Project/Solution** and choose `bdfilter.sln`
+1. Ensure `DDKROOT` environment variable is set
+2. Double-click `bdfilter.sln` to open in Visual Studio 2019
+3. Or open Visual Studio 2019 and select **File → Open → Project/Solution** and choose `bdfilter.sln`
 
 ## Build Configurations
 
@@ -23,8 +45,9 @@ The solution includes the following configurations:
 
 ## Building the Driver
 
-1. Select your desired configuration from the dropdown (Debug/Release, Win32/x64)
-2. Build the solution using:
+1. Verify that `DDKROOT` is set correctly (see Environment Setup above)
+2. Select your desired configuration from the dropdown (Debug/Release, Win32/x64)
+3. Build the solution using:
    - **Build → Build Solution** (Ctrl+Shift+B)
    - Or right-click the project and select **Build**
 
@@ -61,6 +84,14 @@ The original DDK build system (using `sources` and `makefile`) remains fully fun
 
 ## Troubleshooting
 
-- **Error: Platform Toolset not found**: Ensure the Windows Driver Kit (WDK) is properly installed
-- **Build errors**: Make sure you have the correct WDK version compatible with Visual Studio 2019
+- **Error: Cannot open include file: 'NTDDK.h'**: 
+  - Verify that `DDKROOT` environment variable is set correctly
+  - Check that your DDK installation contains the `inc\ddk` directory
+  - Restart Visual Studio after setting environment variables
+- **Platform Toolset not found**: The project uses standard Visual Studio 2019 compiler (v142), not WDK toolset
+- **Build errors**: Make sure you have the legacy DDK installed and `DDKROOT` properly configured
 - **Driver signing issues**: Refer to `DRIVER_SIGNING.md` for detailed signing instructions
+
+## DDK vs WDK Note
+
+This project uses the legacy Windows DDK (Driver Development Kit) rather than the modern WDK (Windows Driver Kit). The DDK was the predecessor to WDK and uses different header files and build systems. The Visual Studio project has been configured to work with the legacy DDK structure.

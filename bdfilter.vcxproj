@@ -30,32 +30,32 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <TargetVersion>Windows10</TargetVersion>
+    <TargetVersion>Windows7</TargetVersion>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
-    <ConfigurationType>Driver</ConfigurationType>
-    <DriverType>WDM</DriverType>
+    <PlatformToolset>v142</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <TargetVersion>Windows10</TargetVersion>
+    <TargetVersion>Windows7</TargetVersion>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
-    <ConfigurationType>Driver</ConfigurationType>
-    <DriverType>WDM</DriverType>
+    <PlatformToolset>v142</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <TargetVersion>Windows10</TargetVersion>
+    <TargetVersion>Windows7</TargetVersion>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
-    <ConfigurationType>Driver</ConfigurationType>
-    <DriverType>WDM</DriverType>
+    <PlatformToolset>v142</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <TargetVersion>Windows10</TargetVersion>
+    <TargetVersion>Windows7</TargetVersion>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>WindowsKernelModeDriver10.0</PlatformToolset>
-    <ConfigurationType>Driver</ConfigurationType>
-    <DriverType>WDM</DriverType>
+    <PlatformToolset>v142</PlatformToolset>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -68,28 +68,41 @@
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <TargetName>bdfilter</TargetName>
     <TargetExt>.sys</TargetExt>
+    <IncludePath>$(DDKROOT)\inc\ddk;$(DDKROOT)\inc\api;$(DDKROOT)\inc\crt;$(IncludePath)</IncludePath>
+    <LibraryPath>$(DDKROOT)\lib\win7\i386;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <TargetName>bdfilter</TargetName>
     <TargetExt>.sys</TargetExt>
+    <IncludePath>$(DDKROOT)\inc\ddk;$(DDKROOT)\inc\api;$(DDKROOT)\inc\crt;$(IncludePath)</IncludePath>
+    <LibraryPath>$(DDKROOT)\lib\win7\i386;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <TargetName>bdfilter</TargetName>
     <TargetExt>.sys</TargetExt>
+    <IncludePath>$(DDKROOT)\inc\ddk;$(DDKROOT)\inc\api;$(DDKROOT)\inc\crt;$(IncludePath)</IncludePath>
+    <LibraryPath>$(DDKROOT)\lib\win7\amd64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <DebuggerFlavor>DbgengKernelDebugger</DebuggerFlavor>
     <TargetName>bdfilter</TargetName>
     <TargetExt>.sys</TargetExt>
+    <IncludePath>$(DDKROOT)\inc\ddk;$(DDKROOT)\inc\api;$(DDKROOT)\inc\crt;$(IncludePath)</IncludePath>
+    <LibraryPath>$(DDKROOT)\lib\win7\amd64;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
       <TreatWarningAsError>false</TreatWarningAsError>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;DEPRECATE_DDK_FUNCTIONS=1;MSC_NOOPT;WIN32;_WIN32;WINNT=1;_WIN32_WINNT=0x0601;WINVER=0x0601;_WIN32_IE=0x0800;WIN32_LEAN_AND_MEAN=1;DEVL=1;__BUILDMACHINE__=WinDDK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;DEPRECATE_DDK_FUNCTIONS=1;MSC_NOOPT;WIN32;_WIN32;WINNT=1;_WIN32_WINNT=0x0601;WINVER=0x0601;_WIN32_IE=0x0800;WIN32_LEAN_AND_MEAN=1;DEVL=1;__BUILDMACHINE__=WinDDK;_KERNEL_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(DDKROOT)\inc\ddk;$(DDKROOT)\inc\api;$(DDKROOT)\inc\crt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <CallingConvention>StdCall</CallingConvention>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>No</MkTypLibCompatible>
@@ -106,7 +119,11 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(SDK_LIB_PATH)\ntstrsafe.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntoskrnl.lib;hal.lib;ntstrsafe.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(DDKROOT)\lib\win7\i386;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Native</SubSystem>
+      <Driver>Driver</Driver>
+      <EntryPointSymbol>DriverEntry</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -116,7 +133,11 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;DEPRECATE_DDK_FUNCTIONS=1;WIN32;_WIN32;WINNT=1;_WIN32_WINNT=0x0601;WINVER=0x0601;_WIN32_IE=0x0800;WIN32_LEAN_AND_MEAN=1;__BUILDMACHINE__=WinDDK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_X86_=1;i386=1;STD_CALL;DEPRECATE_DDK_FUNCTIONS=1;WIN32;_WIN32;WINNT=1;_WIN32_WINNT=0x0601;WINVER=0x0601;_WIN32_IE=0x0800;WIN32_LEAN_AND_MEAN=1;__BUILDMACHINE__=WinDDK;_KERNEL_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(DDKROOT)\inc\ddk;$(DDKROOT)\inc\api;$(DDKROOT)\inc\crt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <CallingConvention>StdCall</CallingConvention>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>No</MkTypLibCompatible>
@@ -135,7 +156,11 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(SDK_LIB_PATH)\ntstrsafe.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntoskrnl.lib;hal.lib;ntstrsafe.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(DDKROOT)\lib\win7\i386;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Native</SubSystem>
+      <Driver>Driver</Driver>
+      <EntryPointSymbol>DriverEntry</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -143,7 +168,12 @@
       <TreatWarningAsError>false</TreatWarningAsError>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;DEPRECATE_DDK_FUNCTIONS=1;MSC_NOOPT;WIN32;_WIN32;WINNT=1;_WIN32_WINNT=0x0601;WINVER=0x0601;_WIN32_IE=0x0800;WIN32_LEAN_AND_MEAN=1;DEVL=1;__BUILDMACHINE__=WinDDK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;DEPRECATE_DDK_FUNCTIONS=1;MSC_NOOPT;WIN32;_WIN32;WINNT=1;_WIN32_WINNT=0x0601;WINVER=0x0601;_WIN32_IE=0x0800;WIN32_LEAN_AND_MEAN=1;DEVL=1;__BUILDMACHINE__=WinDDK;_KERNEL_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(DDKROOT)\inc\ddk;$(DDKROOT)\inc\api;$(DDKROOT)\inc\crt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <CallingConvention>Cdecl</CallingConvention>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>No</MkTypLibCompatible>
@@ -159,7 +189,11 @@
       <PreprocessorDefinitions>_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ResourceCompile>
     <Link>
-      <AdditionalDependencies>$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(SDK_LIB_PATH)\ntstrsafe.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntoskrnl.lib;hal.lib;ntstrsafe.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(DDKROOT)\lib\win7\amd64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Native</SubSystem>
+      <Driver>Driver</Driver>
+      <EntryPointSymbol>DriverEntry</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -169,7 +203,11 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;DEPRECATE_DDK_FUNCTIONS=1;WIN32;_WIN32;WINNT=1;_WIN32_WINNT=0x0601;WINVER=0x0601;_WIN32_IE=0x0800;WIN32_LEAN_AND_MEAN=1;__BUILDMACHINE__=WinDDK;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WIN64;_AMD64_;AMD64;DEPRECATE_DDK_FUNCTIONS=1;WIN32;_WIN32;WINNT=1;_WIN32_WINNT=0x0601;WINVER=0x0601;_WIN32_IE=0x0800;WIN32_LEAN_AND_MEAN=1;__BUILDMACHINE__=WinDDK;_KERNEL_MODE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(DDKROOT)\inc\ddk;$(DDKROOT)\inc\api;$(DDKROOT)\inc\crt;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <CallingConvention>Cdecl</CallingConvention>
     </ClCompile>
     <Midl>
       <MkTypLibCompatible>No</MkTypLibCompatible>
@@ -187,7 +225,11 @@
     <Link>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>$(DDK_LIB_PATH)\ntoskrnl.lib;$(DDK_LIB_PATH)\hal.lib;$(SDK_LIB_PATH)\ntstrsafe.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ntoskrnl.lib;hal.lib;ntstrsafe.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(DDKROOT)\lib\win7\amd64;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <SubSystem>Native</SubSystem>
+      <Driver>Driver</Driver>
+      <EntryPointSymbol>DriverEntry</EntryPointSymbol>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
