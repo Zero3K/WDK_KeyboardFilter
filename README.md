@@ -1,7 +1,13 @@
 # WDK_KeyboardFilter
 WDM 7600.16385.1版本
 
-WinXp程序(64位下编译会不能使用,Test模式也不行)
+## Compatibility
+
+**Recent Fix (2024):** Resolved Windows 7 x64 driver startup issue caused by incorrect object reference management in DriverEntry function.
+
+**Platform Support:**
+- Windows XP and later (32-bit)  
+- Windows 7 x64 and later (with proper driver signing)
 
 部分代码参考自<寒江独钓>一书
 

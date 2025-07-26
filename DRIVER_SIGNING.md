@@ -161,6 +161,12 @@ This catalog file must be present and properly signed for the driver to install 
 - Ensure you're running as Administrator
 - Some antivirus software may block certificate installation
 
+### "Device has problem: CM_PROB_FAILED_DRIVER_ENTRY" (Code 37)
+- **Fixed in 2024:** This was caused by incorrect object reference management in the driver code
+- If using an older version, update to the latest code from the repository
+- The driver now properly manages keyboard class driver object references during initialization
+- This fix specifically resolves Windows 7 x64 driver startup failures even when properly signed
+
 ### Code Integrity Errors in Event Log
 Check Windows Event Viewer under:
 - **Windows Logs > System** (look for Event ID 5038)
