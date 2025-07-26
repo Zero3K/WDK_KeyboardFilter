@@ -84,7 +84,7 @@ if /i "%CERT_EXT%"==".pfx" (
         pause
         exit /b 1
     )
-    set SIGN_PARAMS=/s "%CERT_STORE%" /n "%CERT_NAME%"
+    set SIGN_PARAMS=/s "%CERT_STORE%" /n "%CERT_NAME%" /a
 )
 
 echo.

@@ -97,14 +97,14 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Signing driver files...
-signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.sys"
+signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /a /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.sys"
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to sign %BUILD_DIR%\bdfilter.sys
     pause
     exit /b 1
 )
 
-signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /t http://timestamp.digicert.com "bdfilter.cat"
+signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /a /t http://timestamp.digicert.com "bdfilter.cat"
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to sign bdfilter.cat
     pause
