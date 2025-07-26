@@ -1,4 +1,4 @@
-#include <wdm.h>
+#include <ntddk.h>
 #include <ntstrsafe.h>
 #define KDB_DRIVER_NAME L"\\Driver\\Kbdclass"
 #define DELAY_ONE_MILLISECOND -10

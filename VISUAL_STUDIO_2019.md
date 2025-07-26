@@ -123,4 +123,4 @@ Using the modern WDK provides several advantages over the legacy DDK approach:
 
 ## Legacy DDK Note
 
-This project has been modernized to use WDK 10 instead of the legacy DDK. The source code now uses `wdm.h` (modern WDK header) instead of `NTDDK.h` (legacy DDK header), while maintaining full backwards compatibility with Windows 7.
+This project has been modernized to use WDK 10 instead of the legacy DDK. The source code now uses `ntddk.h` (modern WDK header) instead of `NTDDK.h` (legacy DDK header), while maintaining full backwards compatibility with Windows 7.
