@@ -87,7 +87,7 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Generating catalog file...
-inf2cat /driver:. /os:6.1_X86,6.1_X64
+inf2cat /driver:. /os:7_X86,7_X64
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to generate catalog file
     echo Make sure bdfilter.inf is present and valid in current directory
