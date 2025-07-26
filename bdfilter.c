@@ -731,7 +731,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 	}
 	else
 	{
-		ObDereferenceObject(driver);
+		ObDereferenceObject(kbddriver);
 	}
 
 	pTargetDriver=kbddriver->DeviceObject;
