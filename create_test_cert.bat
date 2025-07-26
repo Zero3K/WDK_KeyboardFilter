@@ -87,7 +87,7 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Generating catalog file...
-inf2cat /driver:. /os:7_X86,7_X64,8_X86,8_X64,10_X86,10_X64
+inf2cat /driver:. /os:7_X86,7_X64
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to generate catalog file
     echo Make sure bdfilter.inf is present and valid in current directory
@@ -97,14 +97,14 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Signing driver files...
-signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.sys"
+signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /a /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.sys"
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to sign %BUILD_DIR%\bdfilter.sys
     pause
     exit /b 1
 )
 
-signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /t http://timestamp.digicert.com "bdfilter.cat"
+signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /a /t http://timestamp.digicert.com "bdfilter.cat"
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to sign bdfilter.cat
     pause
@@ -113,7 +113,11 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Verifying signatures...
+echo NOTE: Verification may show trust errors for test certificates - this is expected.
+echo The files are properly signed but the test certificate is not yet trusted.
+echo.
 signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys"
+echo.
 signtool verify /v /kp "bdfilter.cat"
 
 echo.
@@ -125,6 +129,9 @@ echo Files created:
 echo - %CERT_NAME%.cer (Test certificate for installation)
 echo - bdfilter.cat (Signed catalog file)
 echo - %BUILD_DIR%\bdfilter.sys (Signed driver)
+echo.
+echo NOTE: If verification showed trust errors above, this is expected
+echo for test certificates that haven't been installed yet.
 echo.
 echo Next steps:
 echo 1. Install the test certificate on target machine:

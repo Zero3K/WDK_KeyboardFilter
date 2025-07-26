@@ -84,12 +84,12 @@ if /i "%CERT_EXT%"==".pfx" (
         pause
         exit /b 1
     )
-    set SIGN_PARAMS=/s "%CERT_STORE%" /n "%CERT_NAME%"
+    set SIGN_PARAMS=/s "%CERT_STORE%" /n "%CERT_NAME%" /a
 )
 
 echo.
 echo Generating catalog file...
-inf2cat /driver:. /os:7_X86,7_X64,8_X86,8_X64,10_X86,10_X64
+inf2cat /driver:. /os:7_X86,7_X64
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to generate catalog file
     echo Make sure bdfilter.inf is present and valid in current directory
@@ -117,14 +117,16 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Verifying signatures...
+echo NOTE: Verification may show trust errors for test certificates - this is expected.
+echo.
 signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys"
 if %errorLevel% NEQ 0 (
-    echo WARNING: Driver signature verification failed
+    echo WARNING: Driver signature verification failed (expected for test certificates)
 )
 
 signtool verify /v /kp "bdfilter.cat"
 if %errorLevel% NEQ 0 (
-    echo WARNING: Catalog signature verification failed
+    echo WARNING: Catalog signature verification failed (expected for test certificates)
 )
 
 echo.

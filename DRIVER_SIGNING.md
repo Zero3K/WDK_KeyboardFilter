@@ -206,7 +206,7 @@ For automated builds, you can integrate signing into your build process:
 1. **Add to your build script:**
    ```batch
    rem Generate catalog
-   inf2cat /driver:. /os:7_X64,8_X64,10_X64
+   inf2cat /driver:. /os:7_X86,7_X64
    
    rem Sign files
    signtool sign /f YourCert.pfx /p YourPassword /t http://timestamp.digicert.com bdfilter.sys
