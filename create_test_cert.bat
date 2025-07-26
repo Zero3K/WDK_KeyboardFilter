@@ -4,6 +4,11 @@
 :: This script must be run as Administrator
 :: Usage: create_test_cert.bat [build_directory]
 :: Example: create_test_cert.bat objfre_win7_amd64
+::
+:: Note: This script tries multiple approaches for catalog generation:
+:: 1. inf2cat with comprehensive OS support (Vista through Windows 10)
+:: 2. inf2cat with Windows 7 only (for compatibility)
+:: 3. makecat using bdfilter.cdf as fallback
 
 set BUILD_DIR=%~1
 if "%BUILD_DIR%"=="" set BUILD_DIR=.
@@ -87,12 +92,30 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Generating catalog file...
-inf2cat /driver:. /os:7_X86,7_X64
+echo Trying inf2cat with comprehensive OS support...
+inf2cat /driver:. /os:Vista_X86,Vista_X64,7_X86,7_X64,8_X86,8_X64,6_3_X86,6_3_X64,10_X86,10_X64
 if %errorLevel% NEQ 0 (
-    echo ERROR: Failed to generate catalog file
-    echo Make sure bdfilter.inf is present and valid in current directory
-    pause
-    exit /b 1
+    echo inf2cat failed, trying with Windows 7 only...
+    inf2cat /driver:. /os:7_X86,7_X64
+    if %errorLevel% NEQ 0 (
+        echo inf2cat failed, trying makecat as fallback...
+        where makecat >nul 2>&1
+        if %errorLevel% EQU 0 (
+            makecat bdfilter.cdf
+            if %errorLevel% NEQ 0 (
+                echo ERROR: All catalog generation methods failed
+                echo Make sure bdfilter.inf is present and valid in current directory
+                pause
+                exit /b 1
+            )
+        ) else (
+            echo ERROR: Failed to generate catalog file
+            echo Make sure bdfilter.inf is present and valid in current directory
+            echo Consider installing a compatible version of Windows SDK/WDK
+            pause
+            exit /b 1
+        )
+    )
 )
 
 echo.

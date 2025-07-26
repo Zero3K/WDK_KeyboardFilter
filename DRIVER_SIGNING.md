@@ -260,6 +260,48 @@ signtool verify /v /kp bdfilter.cat    # Verify catalog signature
 - [Windows Hardware Dev Center](https://developer.microsoft.com/en-us/windows/hardware)
 - [Code Signing Best Practices](https://docs.microsoft.com/en-us/windows-hardware/drivers/install/code-signing-best-practices)
 
+## Troubleshooting
+
+### Catalog Generation Issues
+
+If `create_test_cert.bat` fails with catalog generation errors:
+
+```
+Could not find file 'C:\Users\...\AppData\Local\Temp\WST\...\185'.
+Signability test failed.
+ERROR: Failed to generate catalog file
+```
+
+**Cause:** This typically occurs when `inf2cat.exe` has compatibility issues with your WDK version or Windows version.
+
+**Solutions:**
+1. **The script automatically tries multiple approaches:**
+   - First attempts comprehensive OS support (Vista through Windows 10)
+   - Falls back to Windows 7 only if that fails
+   - Uses `makecat.exe` with the CDF file as final fallback
+
+2. **Manual alternatives:**
+   ```cmd
+   # Try with specific OS versions
+   inf2cat /driver:. /os:10_X64,10_X86
+   
+   # Or use makecat directly
+   makecat bdfilter.cdf
+   ```
+
+3. **Verify file presence:**
+   - Ensure `bdfilter.inf` is in current directory
+   - Ensure `bdfilter.sys` is in current directory or specified build directory
+   - Check that both files are not corrupted
+
+### Installation Issues
+
+**Error: "The hash of the file is not present in the specified catalog file"**
+- Solution: Regenerate the catalog file and re-sign the driver
+
+**Error: "Windows cannot verify the digital signature"**
+- Solution: Install the test certificate or enable test signing mode
+
 ## FAQ
 
 **Q: Why does my driver work on Windows 7 x86 but not x64?**
