@@ -730,10 +730,6 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 		DbgPrint("Keyboard Filter Driver: ObReferenceObjectByName failed");
 		return(status);
 	}
-	else
-	{
-		ObDereferenceObject(kbddriver);
-	}
 
 	pTargetDriver=kbddriver->DeviceObject;
 	while(pTargetDriver)
@@ -742,6 +738,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 		if(!NT_SUCCESS(status))
 		{
 			DbgPrint("Keyboard Filter Driver: Failed to create filter device");
+			ObDereferenceObject(kbddriver);
 			return status;
 		}
 		pLowerDriver=IoAttachDeviceToDeviceStack(pFilterDriver,pTargetDriver);
@@ -750,6 +747,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 			DbgPrint("Keyboard Filter Driver: Failed to attach device");
 			IoDeleteDevice(pFilterDriver);
 			pFilterDriver=NULL;
+			ObDereferenceObject(kbddriver);
 			return status;
 		}
 		devExt=(PC2P_DEV_EXT)(pFilterDriver->DeviceExtension);
@@ -766,6 +764,9 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 		pFilterDriver->Flags|=pLowerDriver->Flags&(DO_BUFFERED_IO|DO_DIRECT_IO|DO_POWER_PAGABLE);
 		pTargetDriver=pTargetDriver->NextDevice;
 	}
+	
+	// Dereference the keyboard class driver object after we're done using it
+	ObDereferenceObject(kbddriver);
 	
 	return STATUS_SUCCESS;
 }
