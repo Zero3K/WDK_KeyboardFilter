@@ -43,6 +43,8 @@ The compiled driver (`bdfilter.sys`) will be output to:
 - `Debug/` or `Release/` folder for Win32 builds
 - `x64/Debug/` or `x64/Release/` folder for x64 builds
 
+**Note:** The project is configured with `SignMode=Off` to prevent automatic signing during build. This allows you to handle driver signing manually using the provided scripts, which is more flexible for development purposes.
+
 ## Project Structure in Visual Studio
 
 - **Source Files/**
@@ -74,7 +76,18 @@ After building, the driver must be signed before installation on Windows 7 x64 a
 2. Install the driver:
    - `install.bat [build_output_dir]` - Installs the signed driver
 
-**Note:** For the Visual Studio builds, specify the build output directory (e.g., `Release`, `x64\Release`) as the parameter to the batch files.
+**Examples for Visual Studio builds:**
+```cmd
+# For x64 Release build
+create_test_cert.bat x64\Release
+install.bat x64\Release
+
+# For Win32 Debug build  
+create_test_cert.bat Debug
+install.bat Debug
+```
+
+**Note:** The project is configured to disable automatic signing during build to give you full control over the signing process. This prevents signtool errors and allows you to choose between test signing, development certificates, or production signing as needed.
 
 ## Compatibility with Existing Build System
 
@@ -106,6 +119,11 @@ msbuild bdfilter.sln /p:Configuration=Release /p:Platform=x64
 - **Build errors**: 
   - Make sure you have WDK 10 installed and integrated with Visual Studio 2019
   - Check that all required C++ development tools are installed in Visual Studio
+
+- **Signtool errors during build**: 
+  - **Fixed:** The project now disables automatic signing (`SignMode=Off`)
+  - Use the provided batch scripts for manual signing after build
+  - This prevents build failures due to missing certificates
 
 - **Driver signing issues**: 
   - Refer to `DRIVER_SIGNING.md` for detailed signing instructions
