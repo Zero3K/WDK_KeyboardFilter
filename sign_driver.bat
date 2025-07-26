@@ -89,7 +89,7 @@ if /i "%CERT_EXT%"==".pfx" (
 
 echo.
 echo Generating catalog file...
-inf2cat /driver:. /os:6.1_X86,6.1_X64,6.3_X86,6.3_X64,10.0_X86,10.0_X64
+inf2cat /driver:. /os:6.1_X86,6.1_X64
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to generate catalog file
     echo Make sure bdfilter.inf is present and valid in current directory
