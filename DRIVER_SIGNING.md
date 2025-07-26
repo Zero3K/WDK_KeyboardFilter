@@ -143,6 +143,23 @@ This catalog file must be present and properly signed for the driver to install 
 
 ## Troubleshooting
 
+### Catalog Generation Issues
+
+If you encounter errors like "Could not find file" or "Signability test failed" during catalog generation:
+
+1. **WDK Tools Not in PATH:** The script now automatically searches for WDK tools in standard installation locations:
+   - `C:\Program Files\Windows Kits\10\bin\10.*\x64`
+   - `C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64`
+   - `C:\Program Files\Windows Kits\8.1\bin\x64`
+   - And x86 variants
+
+2. **Multiple OS Support Failure:** The script tries multiple approaches:
+   - First: Comprehensive OS support (Vista through Windows 10)
+   - Second: Windows 7 only (for compatibility)
+   - Third: `makecat.exe` with CDF file as fallback
+
+3. **Visual Studio Developer Command Prompt:** If running from VS 2019 Developer Command Prompt and getting "inf2cat.exe not found", the script will now locate the tool automatically in WDK installation paths.
+
 ### "The required line was not found in the INF" Error
 - This usually means the catalog file is missing or improperly generated
 - Run `create_test_cert.bat [build_dir]` or `sign_driver.bat [build_dir]` to generate the catalog

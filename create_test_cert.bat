@@ -28,28 +28,25 @@ if %errorLevel% NEQ 0 (
     exit /b 1
 )
 
-:: Check if makecert exists
-where makecert >nul 2>&1
-if %errorLevel% NEQ 0 (
+:: Function to find WDK tools in standard installation paths
+call :FindWDKTools
+
+:: Check if all required tools were found
+if "%MAKECERT_PATH%"=="" (
     echo ERROR: makecert.exe not found!
     echo Please install Windows SDK or Windows Driver Kit
-    echo The tools should be in your PATH
     pause
     exit /b 1
 )
 
-:: Check if signtool exists
-where signtool >nul 2>&1
-if %errorLevel% NEQ 0 (
+if "%SIGNTOOL_PATH%"=="" (
     echo ERROR: signtool.exe not found!
     echo Please install Windows SDK or Windows Driver Kit
     pause
     exit /b 1
 )
 
-:: Check if inf2cat exists
-where inf2cat >nul 2>&1
-if %errorLevel% NEQ 0 (
+if "%INF2CAT_PATH%"=="" (
     echo ERROR: inf2cat.exe not found!
     echo Please install Windows Driver Kit
     pause
@@ -83,7 +80,7 @@ set CERT_NAME=BdFilterTestCert
 set STORE_NAME=PrivateCertStore
 
 echo Creating test certificate...
-makecert -r -pe -ss %STORE_NAME% -n "CN=%CERT_NAME%" -eku 1.3.6.1.5.5.7.3.3 %CERT_NAME%.cer
+"%MAKECERT_PATH%" -r -pe -ss %STORE_NAME% -n "CN=%CERT_NAME%" -eku 1.3.6.1.5.5.7.3.3 %CERT_NAME%.cer
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to create test certificate
     pause
@@ -93,10 +90,10 @@ if %errorLevel% NEQ 0 (
 echo.
 echo Generating catalog file...
 echo Trying inf2cat with comprehensive OS support...
-inf2cat /driver:. /os:Vista_X86,Vista_X64,7_X86,7_X64,8_X86,8_X64,6_3_X86,6_3_X64,10_X86,10_X64
+"%INF2CAT_PATH%" /driver:. /os:Vista_X86,Vista_X64,7_X86,7_X64,8_X86,8_X64,6_3_X86,6_3_X64,10_X86,10_X64
 if %errorLevel% NEQ 0 (
     echo inf2cat failed, trying with Windows 7 only...
-    inf2cat /driver:. /os:7_X86,7_X64
+    "%INF2CAT_PATH%" /driver:. /os:7_X86,7_X64
     if %errorLevel% NEQ 0 (
         echo inf2cat failed, trying makecat as fallback...
         where makecat >nul 2>&1
@@ -120,14 +117,14 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Signing driver files...
-signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /a /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.sys"
+"%SIGNTOOL_PATH%" sign /v /s %STORE_NAME% /n "%CERT_NAME%" /a /t http://timestamp.digicert.com "%BUILD_DIR%\bdfilter.sys"
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to sign %BUILD_DIR%\bdfilter.sys
     pause
     exit /b 1
 )
 
-signtool sign /v /s %STORE_NAME% /n "%CERT_NAME%" /a /t http://timestamp.digicert.com "bdfilter.cat"
+"%SIGNTOOL_PATH%" sign /v /s %STORE_NAME% /n "%CERT_NAME%" /a /t http://timestamp.digicert.com "bdfilter.cat"
 if %errorLevel% NEQ 0 (
     echo ERROR: Failed to sign bdfilter.cat
     pause
@@ -139,9 +136,9 @@ echo Verifying signatures...
 echo NOTE: Verification may show trust errors for test certificates - this is expected.
 echo The files are properly signed but the test certificate is not yet trusted.
 echo.
-signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys"
+"%SIGNTOOL_PATH%" verify /v /kp "%BUILD_DIR%\bdfilter.sys"
 echo.
-signtool verify /v /kp "bdfilter.cat"
+"%SIGNTOOL_PATH%" verify /v /kp "bdfilter.cat"
 
 echo.
 echo ============================================
@@ -168,3 +165,109 @@ echo.
 echo 3. Run install.bat %BUILD_DIR% to install the driver
 echo.
 pause
+
+goto :eof
+
+:FindWDKTools
+:: Function to locate WDK tools in standard installation paths
+echo Locating WDK tools...
+
+set MAKECERT_PATH=
+set SIGNTOOL_PATH=
+set INF2CAT_PATH=
+
+:: First try to find tools in PATH
+where makecert >nul 2>&1
+if %errorLevel% EQU 0 (
+    for /f "tokens=*" %%i in ('where makecert') do set MAKECERT_PATH=%%i
+)
+
+where signtool >nul 2>&1
+if %errorLevel% EQU 0 (
+    for /f "tokens=*" %%i in ('where signtool') do set SIGNTOOL_PATH=%%i
+)
+
+where inf2cat >nul 2>&1
+if %errorLevel% EQU 0 (
+    for /f "tokens=*" %%i in ('where inf2cat') do set INF2CAT_PATH=%%i
+)
+
+:: If tools not found in PATH, search in standard WDK installation paths
+if "%MAKECERT_PATH%"=="" call :FindToolInWDK makecert.exe MAKECERT_PATH
+if "%SIGNTOOL_PATH%"=="" call :FindToolInWDK signtool.exe SIGNTOOL_PATH
+if "%INF2CAT_PATH%"=="" call :FindToolInWDK inf2cat.exe INF2CAT_PATH
+
+echo.
+echo Tool locations:
+if not "%MAKECERT_PATH%"=="" echo   makecert: %MAKECERT_PATH%
+if not "%SIGNTOOL_PATH%"=="" echo   signtool: %SIGNTOOL_PATH%
+if not "%INF2CAT_PATH%"=="" echo   inf2cat: %INF2CAT_PATH%
+echo.
+
+goto :eof
+
+:FindToolInWDK
+:: Function to find a specific tool in WDK installation paths
+:: %1 = tool filename (e.g., inf2cat.exe)
+:: %2 = variable name to set (e.g., INF2CAT_PATH)
+
+set TOOL_NAME=%~1
+set VAR_NAME=%~2
+
+:: Common WDK installation paths for different versions and architectures
+set WDK_PATHS[0]="C:\Program Files (x86)\Windows Kits\10\bin\x64"
+set WDK_PATHS[1]="C:\Program Files (x86)\Windows Kits\10\bin\x86"
+set WDK_PATHS[2]="C:\Program Files\Windows Kits\10\bin\x64"
+set WDK_PATHS[3]="C:\Program Files\Windows Kits\10\bin\x86"
+
+:: Also check versioned paths for WDK 10
+for /d %%d in ("C:\Program Files (x86)\Windows Kits\10\bin\10.*") do (
+    if exist "%%d\x64\%TOOL_NAME%" (
+        set %VAR_NAME%=%%d\x64\%TOOL_NAME%
+        goto :eof
+    )
+    if exist "%%d\x86\%TOOL_NAME%" (
+        set %VAR_NAME%=%%d\x86\%TOOL_NAME%
+        goto :eof
+    )
+)
+
+for /d %%d in ("C:\Program Files\Windows Kits\10\bin\10.*") do (
+    if exist "%%d\x64\%TOOL_NAME%" (
+        set %VAR_NAME%=%%d\x64\%TOOL_NAME%
+        goto :eof
+    )
+    if exist "%%d\x86\%TOOL_NAME%" (
+        set %VAR_NAME%=%%d\x86\%TOOL_NAME%
+        goto :eof
+    )
+)
+
+:: Check basic paths without version subdirectories
+for /L %%i in (0,1,3) do (
+    call set "CURRENT_PATH=%%WDK_PATHS[%%i]%%"
+    call set "CURRENT_PATH=%%CURRENT_PATH:"=%%"
+    if exist "%CURRENT_PATH%\%TOOL_NAME%" (
+        set %VAR_NAME%=%CURRENT_PATH%\%TOOL_NAME%
+        goto :eof
+    )
+)
+
+:: Also check WDK 8.1 paths
+set WDK81_PATHS[0]="C:\Program Files (x86)\Windows Kits\8.1\bin\x64"
+set WDK81_PATHS[1]="C:\Program Files (x86)\Windows Kits\8.1\bin\x86"
+set WDK81_PATHS[2]="C:\Program Files\Windows Kits\8.1\bin\x64"
+set WDK81_PATHS[3]="C:\Program Files\Windows Kits\8.1\bin\x86"
+
+for /L %%i in (0,1,3) do (
+    call set "CURRENT_PATH=%%WDK81_PATHS[%%i]%%"
+    call set "CURRENT_PATH=%%CURRENT_PATH:"=%%"
+    if exist "%CURRENT_PATH%\%TOOL_NAME%" (
+        set %VAR_NAME%=%CURRENT_PATH%\%TOOL_NAME%
+        goto :eof
+    )
+)
+
+goto :eof
+
+goto :eof
