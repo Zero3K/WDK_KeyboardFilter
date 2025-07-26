@@ -1,4 +1,5 @@
 #include <NTDDK.h>
+#include <ntstrsafe.h>
 #define KDB_DRIVER_NAME L"\\Driver\\Kbdclass"
 #define DELAY_ONE_MILLISECOND -10
 #define LAG_MITIGATION_THRESHOLD_MS 50  // Threshold in milliseconds to filter duplicate keys
@@ -45,7 +46,7 @@ typedef struct _KEYBOARD_INPUT_DATA{
 	USHORT Reserved;
 	ULONG ExtraInformation;
 }KEYBOARD_INPUT_DATA,*PKEYBOARD_INPUT_DATA;
-VOID MakeCodeToASCII(USHORT MakeCode,USHORT Flags,PCHAR Ascii)//AsciiΪ16�ֽ�
+VOID MakeCodeToASCII(USHORT MakeCode,USHORT Flags,PCHAR Ascii)//Ascii is 16 bytes
 {
 	if(Flags>=2)
 	{
@@ -55,43 +56,43 @@ VOID MakeCodeToASCII(USHORT MakeCode,USHORT Flags,PCHAR Ascii)//AsciiΪ16�ֽ�
 			{
 			case 0x2a:
 				{
-					strncpy(Ascii," ",16);
+					RtlStringCchCopyA(Ascii, 16, " ");
 					break;
 				}
 			case 0x5b:
 			case 0x5c:
 				{
-					strncpy(Ascii,"Windows����",16);
+					RtlStringCchCopyA(Ascii, 16, "Windows Key");
 					break;
 				}
 			case 0x48:
 				{
-					strncpy(Ascii,"Up����",16);
+					RtlStringCchCopyA(Ascii, 16, "Up Key");
 					break;
 				}
 			case 0x50:
 				{
-					strncpy(Ascii,"Down����",16);
+					RtlStringCchCopyA(Ascii, 16, "Down Key");
 					break;
 				}
 			case 0x4b:
 				{
-					strncpy(Ascii,"Left����",16);
+					RtlStringCchCopyA(Ascii, 16, "Left Key");
 					break;
 				}
 			case 0x4d:
 				{
-					strncpy(Ascii,"Right����",16);
+					RtlStringCchCopyA(Ascii, 16, "Right Key");
 					break;
 				}
 			case 0x53:
 				{
-					strncpy(Ascii,"Del����",16);
+					RtlStringCchCopyA(Ascii, 16, "Del Key");
 					break;
 				}
 			default:
 				{
-					strncpy(Ascii,"Error",16);
+					RtlStringCchCopyA(Ascii, 16, "Error");
 					break;
 				}
 			}
@@ -102,43 +103,43 @@ VOID MakeCodeToASCII(USHORT MakeCode,USHORT Flags,PCHAR Ascii)//AsciiΪ16�ֽ�
 			{
 			case 0x2a:
 				{
-					strncpy(Ascii," ",16);
+					RtlStringCchCopyA(Ascii, 16, " ");
 					break;
 				}
 			case 0x5b:
 			case 0x5c:
 				{
-					strncpy(Ascii,"Windows����",16);
+					RtlStringCchCopyA(Ascii, 16, "Windows Key");
 					break;
 				}
 			case 0x48:
 				{
-					strncpy(Ascii,"Up����",16);
+					RtlStringCchCopyA(Ascii, 16, "Up Key");
 					break;
 				}
 			case 0x50:
 				{
-					strncpy(Ascii,"Down����",16);
+					RtlStringCchCopyA(Ascii, 16, "Down Key");
 					break;
 				}
 			case 0x4b:
 				{
-					strncpy(Ascii,"Left����",16);
+					RtlStringCchCopyA(Ascii, 16, "Left Key");
 					break;
 				}
 			case 0x4d:
 				{
-					strncpy(Ascii,"Right����",16);
+					RtlStringCchCopyA(Ascii, 16, "Right Key");
 					break;
 				}
 			case 0x53:
 				{
-					strncpy(Ascii,"Del����",16);
+					RtlStringCchCopyA(Ascii, 16, "Del Key");
 					break;
 				}
 			default:
 				{
-					strncpy(Ascii,"Error",16);
+					RtlStringCchCopyA(Ascii, 16, "Error");
 					break;
 				}
 			}
@@ -149,338 +150,338 @@ VOID MakeCodeToASCII(USHORT MakeCode,USHORT Flags,PCHAR Ascii)//AsciiΪ16�ֽ�
 	{
 	case 0x1d:
 		{
-			strncpy(Ascii,"Ctrl",12);
+			RtlStringCchCopyA(Ascii, 12, "Ctrl");
 			break;
 		}
 	case 0x1c:
 		{
-			strncpy(Ascii,"Enter",12);
+			RtlStringCchCopyA(Ascii, 12, "Enter");
 			break;
 		}
 	case 0x3a:
 		{
-			strncpy(Ascii,"CapsLock",12);
+			RtlStringCchCopyA(Ascii, 12, "CapsLock");
 			break;
 		}
 	case 0x2a:
 	case 0x36:
 		{
-			strncpy(Ascii,"Shift",12);
+			RtlStringCchCopyA(Ascii, 12, "Shift");
 			break;
 		}
 	case 0x02:
 		{
-			strncpy(Ascii,"1",12);
+			RtlStringCchCopyA(Ascii, 12, "1");
 			break;
 		}
 	case 0x4f:
 		{
-			strncpy(Ascii,"Num1",12);
+			RtlStringCchCopyA(Ascii, 12, "Num1");
 			break;
 		}
 	case 0x03:
 		{
-			strncpy(Ascii,"2",12);
+			RtlStringCchCopyA(Ascii, 12, "2");
 			break;
 		}
 	case 0x50:
 		{
-			strncpy(Ascii,"Num2",12);
+			RtlStringCchCopyA(Ascii, 12, "Num2");
 			break;
 		}
 	case 0x04:
 		{
-			strncpy(Ascii,"3",12);
+			RtlStringCchCopyA(Ascii, 12, "3");
 			break;
 		}
 	case 0x51:
 		{
-			strncpy(Ascii,"Num3",12);
+			RtlStringCchCopyA(Ascii, 12, "Num3");
 			break;
 		}
 	case 0x05:
 		{
-			strncpy(Ascii,"4",12);
+			RtlStringCchCopyA(Ascii, 12, "4");
 			break;
 		}
 	case 0x4b:
 		{
-			strncpy(Ascii,"Num4",12);
+			RtlStringCchCopyA(Ascii, 12, "Num4");
 			break;
 		}
 	case 0x06:
 		{
-			strncpy(Ascii,"5",12);
+			RtlStringCchCopyA(Ascii, 12, "5");
 			break;
 		}
 	case 0x4c:
 		{
-			strncpy(Ascii,"Num5",12);
+			RtlStringCchCopyA(Ascii, 12, "Num5");
 			break;
 		}
 	case 0x07:
 		{
-			strncpy(Ascii,"6",12);
+			RtlStringCchCopyA(Ascii, 12, "6");
 			break;
 		}
 	case 0x4d:
 		{
-			strncpy(Ascii,"Num6",12);
+			RtlStringCchCopyA(Ascii, 12, "Num6");
 			break;
 		}
 	case 0x08:
 		{
-			strncpy(Ascii,"7",12);
+			RtlStringCchCopyA(Ascii, 12, "7");
 			break;
 		}
 	case 0x47:
 		{
-			strncpy(Ascii,"Num7",12);
+			RtlStringCchCopyA(Ascii, 12, "Num7");
 			break;
 		}
 	case 0x09:
 		{
-			strncpy(Ascii,"8",12);
+			RtlStringCchCopyA(Ascii, 12, "8");
 			break;
 		}
 	case 0x48:
 		{
-			strncpy(Ascii,"Num8",12);
+			RtlStringCchCopyA(Ascii, 12, "Num8");
 			break;
 		}
 	case 0x0a:
 		{
-			strncpy(Ascii,"9",12);
+			RtlStringCchCopyA(Ascii, 12, "9");
 			break;
 		}
 	case 0x49:
 		{
-			strncpy(Ascii,"Num9",12);
+			RtlStringCchCopyA(Ascii, 12, "Num9");
 			break;
 		}
 	case 0x0b:
 		{
-			strncpy(Ascii,"0",12);
+			RtlStringCchCopyA(Ascii, 12, "0");
 			break;
 		}
 	case 0x52:
 		{
-			strncpy(Ascii,"Num0",12);
+			RtlStringCchCopyA(Ascii, 12, "Num0");
 			break;
 		}
 	case 0x1e:
 		{
-			strncpy(Ascii,"a",12);
+			RtlStringCchCopyA(Ascii, 12, "a");
 			break;
 		}
 	case 0x30:
 		{
-			strncpy(Ascii,"b",12);
+			RtlStringCchCopyA(Ascii, 12, "b");
 			break;
 		}
 	case 0x2e:
 		{
-			strncpy(Ascii,"c",12);
+			RtlStringCchCopyA(Ascii, 12, "c");
 			break;
 		}
 	case 0x20:
 		{
-			strncpy(Ascii,"d",12);
+			RtlStringCchCopyA(Ascii, 12, "d");
 			break;
 		}
 	case 0x12:
 		{
-			strncpy(Ascii,"e",12);
+			RtlStringCchCopyA(Ascii, 12, "e");
 			break;
 		}
 	case 0x21:
 		{
-			strncpy(Ascii,"f",12);
+			RtlStringCchCopyA(Ascii, 12, "f");
 			break;
 		}
 	case 0x22:
 		{
-			strncpy(Ascii,"g",12);
+			RtlStringCchCopyA(Ascii, 12, "g");
 			break;
 		}
 	case 0x23:
 		{
-			strncpy(Ascii,"h",12);
+			RtlStringCchCopyA(Ascii, 12, "h");
 			break;
 		}
 	case 0x17:
 		{
-			strncpy(Ascii,"i",12);
+			RtlStringCchCopyA(Ascii, 12, "i");
 			break;
 		}
 	case 0x24:
 		{
-			strncpy(Ascii,"j",12);
+			RtlStringCchCopyA(Ascii, 12, "j");
 			break;
 		}
 	case 0x25:
 		{
-			strncpy(Ascii,"k",12);
+			RtlStringCchCopyA(Ascii, 12, "k");
 			break;
 		}
 	case 0x26:
 		{
-			strncpy(Ascii,"l",12);
+			RtlStringCchCopyA(Ascii, 12, "l");
 			break;
 		}
 	case 0x32:
 		{
-			strncpy(Ascii,"m",12);
+			RtlStringCchCopyA(Ascii, 12, "m");
 			break;
 		}
 	case 0x31:
 		{
-			strncpy(Ascii,"n",12);
+			RtlStringCchCopyA(Ascii, 12, "n");
 			break;
 		}
 	case 0x18:
 		{
-			strncpy(Ascii,"o",12);
+			RtlStringCchCopyA(Ascii, 12, "o");
 			break;
 		}
 	case 0x19:
 		{
-			strncpy(Ascii,"p",12);
+			RtlStringCchCopyA(Ascii, 12, "p");
 			break;
 		}
 	case 0x10:
 		{
-			strncpy(Ascii,"q",12);
+			RtlStringCchCopyA(Ascii, 12, "q");
 			break;
 		}
 	case 0x13:
 		{
-			strncpy(Ascii,"r",12);
+			RtlStringCchCopyA(Ascii, 12, "r");
 			break;
 		}
 	case 0x1f:
 		{
-			strncpy(Ascii,"s",12);
+			RtlStringCchCopyA(Ascii, 12, "s");
 			break;
 		}
 	case 0x14:
 		{
-			strncpy(Ascii,"t",12);
+			RtlStringCchCopyA(Ascii, 12, "t");
 			break;
 		}
 	case 0x16:
 		{
-			strncpy(Ascii,"u",12);
+			RtlStringCchCopyA(Ascii, 12, "u");
 			break;
 		}
 	case 0x2f:
 		{
-			strncpy(Ascii,"v",12);
+			RtlStringCchCopyA(Ascii, 12, "v");
 			break;
 		}
 	case 0x11:
 		{
-			strncpy(Ascii,"w",12);
+			RtlStringCchCopyA(Ascii, 12, "w");
 			break;
 		}
 	case 0x2d:
 		{
-			strncpy(Ascii,"x",12);
+			RtlStringCchCopyA(Ascii, 12, "x");
 			break;
 		}
 	case 0x15:
 		{
-			strncpy(Ascii,"y",12);
+			RtlStringCchCopyA(Ascii, 12, "y");
 			break;
 		}
 	case 0x2c:
 		{
-			strncpy(Ascii,"z",12);
+			RtlStringCchCopyA(Ascii, 12, "z");
 			break;
 		}
 	case 0x39:
 		{
-			strncpy(Ascii,"Space",12);
+			RtlStringCchCopyA(Ascii, 12, "Space");
 			break;
 		}
 	case 0x0e:
 		{
-			strncpy(Ascii,"BackSpace",12);
+			RtlStringCchCopyA(Ascii, 12, "BackSpace");
 			break;
 		}
 	case 0x0f:
 		{
-			strncpy(Ascii,"Tab",12);
+			RtlStringCchCopyA(Ascii, 12, "Tab");
 			break;
 		}
 	case 0x45:
 		{
-			strncpy(Ascii,"NumLock",12);
+			RtlStringCchCopyA(Ascii, 12, "NumLock");
 			break;
 		}
 	case 0x33:
 		{
-			strncpy(Ascii,",",12);
+			RtlStringCchCopyA(Ascii, 12, ",");
 			break;
 		}
 	case 0x34:
 		{
-			strncpy(Ascii,".",12);
+			RtlStringCchCopyA(Ascii, 12, ".");
 			break;
 		}
 	case 0x35:
 		{
-			strncpy(Ascii,"/",12);
+			RtlStringCchCopyA(Ascii, 12, "/");
 			break;
 		}
 	case 0x27:
 		{
-			strncpy(Ascii,";",12);
+			RtlStringCchCopyA(Ascii, 12, ";");
 			break;
 		}
 	case 0x28:
 		{
-			strncpy(Ascii,"'",12);
+			RtlStringCchCopyA(Ascii, 12, "'");
 			break;
 		}
 	case 0x1a:
 		{
-			strncpy(Ascii,"[",12);
+			RtlStringCchCopyA(Ascii, 12, "[");
 			break;
 		}
 	case 0x1b:
 		{
-			strncpy(Ascii,"]",12);
+			RtlStringCchCopyA(Ascii, 12, "]");
 			break;
 		}
 	case 0x2b:
 		{
-			strncpy(Ascii,"\\",12);
+			RtlStringCchCopyA(Ascii, 12, "\\");
 			break;
 		}
 	case 0x0c:
 		{
-			strncpy(Ascii,"-",12);
+			RtlStringCchCopyA(Ascii, 12, "-");
 			break;
 		}
 	case 0x0d:
 		{
-			strncpy(Ascii,"=",12);
+			RtlStringCchCopyA(Ascii, 12, "=");
 			break;
 		}
 	default:
 		{
-			strncpy(Ascii,"Error",12);
+			RtlStringCchCopyA(Ascii, 12, "Error");
 			return;
 		}
 	}
 	if(Flags==0)
 	{
-		strncat(Ascii,"����",4);
+		RtlStringCchCatA(Ascii, 16, " Down");
 	}
 	else
 	{
-		strncat(Ascii,"����",4);
+		RtlStringCchCatA(Ascii, 16, " Up");
 	}
 	return;
 }
@@ -558,12 +559,12 @@ VOID DriverUnload(PDRIVER_OBJECT driver)
 	{
 		KeDelayExecutionThread(KernelMode,FALSE,&lDelay);
 	}
-	DbgPrint("���̹�������:�����ر�");
+	DbgPrint("Keyboard Filter Driver: Driver unloaded");
 	return;
 }
 NTSTATUS kbDispatchGeneral(PDEVICE_OBJECT DeviceObject,PIRP Irp)
 {
-	DbgPrint("���̹�������:������Ϣ");
+	DbgPrint("Keyboard Filter Driver: General message");
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(((PC2P_DEV_EXT)DeviceObject->DeviceExtension)->LowerDeviceObject,Irp);
 }
@@ -586,7 +587,7 @@ NTSTATUS kbpnp(PDEVICE_OBJECT DeviceObject,PIRP Irp)
 	{
 	case IRP_MN_REMOVE_DEVICE:
 		{
-			DbgPrint("���̹�������:��һ��USB�����˳���(PNP����)");
+			DbgPrint("Keyboard Filter Driver: USB device removed (PNP event)");
 			IoSkipCurrentIrpStackLocation(Irp);
 			IoCallDriver(devExt->LowerDeviceObject,Irp);
 			IoDetachDevice(devExt->LowerDeviceObject);
@@ -632,11 +633,11 @@ NTSTATUS kbReadComplete(PDEVICE_OBJECT DeviceObject,PIRP Irp,PVOID Context)
 					FilteredCount++;
 					
 					MakeCodeToASCII(KeyData[i].MakeCode,KeyData[i].Flags,Ascii);
-					DbgPrint("���̹�������:%s",Ascii);
+					DbgPrint("Keyboard Filter Driver: %s",Ascii);
 				} else {
 					// Filtered out duplicate key event
 					MakeCodeToASCII(KeyData[i].MakeCode,KeyData[i].Flags,Ascii);
-					DbgPrint("���̹�������:�Ѽ������ظ�����:%s",Ascii);
+					DbgPrint("Keyboard Filter Driver: Filtered duplicate key: %s",Ascii);
 				}
 			}
 			
@@ -654,7 +655,7 @@ NTSTATUS kbReadComplete(PDEVICE_OBJECT DeviceObject,PIRP Irp,PVOID Context)
 			for(i=0;i<buf_len;i++)
 			{
 				MakeCodeToASCII(KeyData[i].MakeCode,KeyData[i].Flags,Ascii);
-				DbgPrint("���̹�������:%s",Ascii);
+				DbgPrint("Keyboard Filter Driver: %s",Ascii);
 			}
 		}
 	}
@@ -674,7 +675,7 @@ NTSTATUS kbread(PDEVICE_OBJECT DeviceObject,PIRP Irp)
 	KeInitializeEvent(&waitEvent,NotificationEvent,FALSE);
 	if(Irp->CurrentLocation==1)
 	{
-		DbgPrint("���̹�������:����������������ٵĵ�ǰλ��");
+		DbgPrint("Keyboard Filter Driver: Invalid current IRP stack location");
 		status=STATUS_INVALID_DEVICE_REQUEST;
 		Irp->IoStatus.Status=status;
 		Irp->IoStatus.Information=0;
@@ -696,11 +697,11 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 	PDRIVER_OBJECT kbddriver=NULL;
 	PC2P_DEV_EXT devExt;
 	
-	PDEVICE_OBJECT pFilterDriver=NULL;//��������
-	PDEVICE_OBJECT pTargetDriver=NULL;//Ŀ������
-	PDEVICE_OBJECT pLowerDriver=NULL;//�·�����
+	PDEVICE_OBJECT pFilterDriver=NULL;//Filter device
+	PDEVICE_OBJECT pTargetDriver=NULL;//Target device
+	PDEVICE_OBJECT pLowerDriver=NULL;//Lower device
 
-	DbgPrint("���̹�������:��������");
+	DbgPrint("Keyboard Filter Driver: Driver loaded");
 	
 	
 	
@@ -726,7 +727,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 	status=ObReferenceObjectByName(&kbdname,OBJ_CASE_INSENSITIVE,NULL,FILE_ALL_ACCESS,IoDriverObjectType,KernelMode,NULL,&kbddriver);
 	if(!NT_SUCCESS(status))
 	{
-		DbgPrint("���̹�������:ObReferenceObjectByName�������ش���");
+		DbgPrint("Keyboard Filter Driver: ObReferenceObjectByName failed");
 		return(status);
 	}
 	else
@@ -740,13 +741,13 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 		status=IoCreateDevice(driver,sizeof(C2P_DEV_EXT),NULL,pTargetDriver->DeviceType,pTargetDriver->Characteristics,FALSE,&pFilterDriver);
 		if(!NT_SUCCESS(status))
 		{
-			DbgPrint("���̹�������:���������豸ʧ��");
+			DbgPrint("Keyboard Filter Driver: Failed to create filter device");
 			return status;
 		}
 		pLowerDriver=IoAttachDeviceToDeviceStack(pFilterDriver,pTargetDriver);
 		if(!pLowerDriver)
 		{
-			DbgPrint("���̹�������:���豸ʧ��");
+			DbgPrint("Keyboard Filter Driver: Failed to attach device");
 			IoDeleteDevice(pFilterDriver);
 			pFilterDriver=NULL;
 			return status;
@@ -754,7 +755,7 @@ NTSTATUS DriverEntry(PDRIVER_OBJECT driver,PUNICODE_STRING RegistryPath)
 		devExt=(PC2P_DEV_EXT)(pFilterDriver->DeviceExtension);
 		memset(devExt,0,sizeof(C2P_DEV_EXT));
 		devExt->NodeSize=sizeof(C2P_DEV_EXT);
-		//KeInitializeSpinLock(����μ�windows������ϵ�к���
+		//KeInitializeSpinLock - reference to Windows kernel system function
 		KeInitializeSpinLock(&(devExt->IoRequestspinLock));
 		KeInitializeEvent(&(devExt->IoInProgressEvent),NotificationEvent,FALSE);
 		devExt->TargetDeviceObject=pTargetDriver;
