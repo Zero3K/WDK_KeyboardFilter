@@ -1,39 +1,26 @@
 # Visual Studio 2019 Build Instructions
 
-This project now includes Visual Studio 2019 solution and project files for building the keyboard filter driver.
+This project now includes Visual Studio 2019 solution and project files for building the keyboard filter driver using the modern Windows Driver Kit (WDK).
 
 ## Prerequisites
 
 1. **Visual Studio 2019** (Community, Professional, or Enterprise)
-2. **Windows Driver Development Kit (DDK)** - Legacy DDK (not WDK)
-   - The project requires the legacy Windows DDK (Driver Development Kit) 
-   - Common installation paths: `C:\WINDDK\7600.16385.1\` or similar
-   - **Important**: You must set the `DDKROOT` environment variable to point to your DDK installation directory
+2. **Windows Driver Kit (WDK) 10** 
+   - Download from Microsoft: https://docs.microsoft.com/en-us/windows-hardware/drivers/download-the-wdk
+   - The WDK must be installed after Visual Studio 2019
+   - Includes all necessary headers, libraries, and build tools
 
-## Environment Setup
+## Installation Steps
 
-### Setting the DDKROOT Environment Variable
-
-Before building, you must set the `DDKROOT` environment variable to point to your DDK installation:
-
-**Method 1: System Environment Variables**
-1. Right-click **This PC** → **Properties** → **Advanced system settings** → **Environment Variables**
-2. Under **System variables**, click **New**
-3. Variable name: `DDKROOT`
-4. Variable value: Path to your DDK installation (e.g., `C:\WINDDK\7600.16385.1`)
-5. Click **OK** and restart Visual Studio
-
-**Method 2: Visual Studio Project Settings**
-1. Open the project in Visual Studio
-2. Right-click the project → **Properties**
-3. Go to **Configuration Properties** → **Build Events** → **Pre-Build Event**
-4. Add: `set DDKROOT=C:\WINDDK\7600.16385.1` (adjust path as needed)
+1. **Install Visual Studio 2019** with C++ development tools
+2. **Install Windows Driver Kit (WDK) 10**
+   - The WDK installer will automatically integrate with Visual Studio 2019
+   - Adds the `WindowsKernelModeDriver10.0` platform toolset
 
 ## Opening the Project
 
-1. Ensure `DDKROOT` environment variable is set
-2. Double-click `bdfilter.sln` to open in Visual Studio 2019
-3. Or open Visual Studio 2019 and select **File → Open → Project/Solution** and choose `bdfilter.sln`
+1. Double-click `bdfilter.sln` to open in Visual Studio 2019
+2. Or open Visual Studio 2019 and select **File → Open → Project/Solution** and choose `bdfilter.sln`
 
 ## Build Configurations
 
@@ -43,11 +30,12 @@ The solution includes the following configurations:
 - **Debug|x64** - 64-bit debug build
 - **Release|x64** - 64-bit release build
 
+All configurations target **Windows 7** and later for maximum compatibility.
+
 ## Building the Driver
 
-1. Verify that `DDKROOT` is set correctly (see Environment Setup above)
-2. Select your desired configuration from the dropdown (Debug/Release, Win32/x64)
-3. Build the solution using:
+1. Select your desired configuration from the dropdown (Debug/Release, Win32/x64)
+2. Build the solution using:
    - **Build → Build Solution** (Ctrl+Shift+B)
    - Or right-click the project and select **Build**
 
@@ -64,6 +52,16 @@ The compiled driver (`bdfilter.sys`) will be output to:
 - **Build Files/**
   - `sources` - Original DDK build configuration
   - `makefile` - Original DDK makefile
+
+## Windows Version Compatibility
+
+This driver is built with modern WDK 10 but maintains compatibility with:
+- **Windows 7** (both 32-bit and 64-bit)
+- **Windows 8/8.1**
+- **Windows 10**
+- **Windows 11**
+
+The driver uses WDM (Windows Driver Model) APIs that are available across all these Windows versions.
 
 ## Driver Signing and Installation
 
@@ -82,16 +80,47 @@ After building, the driver must be signed before installation on Windows 7 x64 a
 
 The original DDK build system (using `sources` and `makefile`) remains fully functional. This Visual Studio solution is an additional build method and does not replace the existing system.
 
+**Build Methods:**
+```bash
+# Traditional DDK build (still works)
+build -cZ
+
+# New Visual Studio build with modern WDK
+msbuild bdfilter.sln /p:Configuration=Release /p:Platform=x64
+
+# Visual Studio IDE build
+# Open bdfilter.sln in Visual Studio 2019 and build normally
+```
+
 ## Troubleshooting
 
-- **Error: Cannot open include file: 'NTDDK.h'**: 
-  - Verify that `DDKROOT` environment variable is set correctly
-  - Check that your DDK installation contains the `inc\ddk` directory
-  - Restart Visual Studio after setting environment variables
-- **Platform Toolset not found**: The project uses standard Visual Studio 2019 compiler (v142), not WDK toolset
-- **Build errors**: Make sure you have the legacy DDK installed and `DDKROOT` properly configured
-- **Driver signing issues**: Refer to `DRIVER_SIGNING.md` for detailed signing instructions
+- **WDK not found**: 
+  - Ensure WDK 10 is installed after Visual Studio 2019
+  - Restart Visual Studio after WDK installation
+  - Verify in **Help → About** that WDK components are listed
 
-## DDK vs WDK Note
+- **Platform Toolset not found**: 
+  - The project uses `WindowsKernelModeDriver10.0` toolset from WDK
+  - Ensure WDK 10 is properly installed and integrated with Visual Studio
 
-This project uses the legacy Windows DDK (Driver Development Kit) rather than the modern WDK (Windows Driver Kit). The DDK was the predecessor to WDK and uses different header files and build systems. The Visual Studio project has been configured to work with the legacy DDK structure.
+- **Build errors**: 
+  - Make sure you have WDK 10 installed and integrated with Visual Studio 2019
+  - Check that all required C++ development tools are installed in Visual Studio
+
+- **Driver signing issues**: 
+  - Refer to `DRIVER_SIGNING.md` for detailed signing instructions
+  - Test certificate signing is required for development/testing
+
+## Modern WDK Benefits
+
+Using the modern WDK provides several advantages over the legacy DDK approach:
+
+- **Integrated Development**: Full IntelliSense support and debugging capabilities
+- **Modern Toolchain**: Up-to-date compiler optimizations and security features  
+- **Simplified Setup**: No need to set environment variables or manually configure paths
+- **Cross-Platform**: Single project file works across different Windows versions
+- **Active Support**: Microsoft actively maintains and updates the WDK
+
+## Legacy DDK Note
+
+This project has been modernized to use WDK 10 instead of the legacy DDK. The source code now uses `wdm.h` (modern WDK header) instead of `NTDDK.h` (legacy DDK header), while maintaining full backwards compatibility with Windows 7.
