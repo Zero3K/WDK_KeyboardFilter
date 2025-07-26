@@ -113,7 +113,11 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Verifying signatures...
+echo NOTE: Verification may show trust errors for test certificates - this is expected.
+echo The files are properly signed but the test certificate is not yet trusted.
+echo.
 signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys"
+echo.
 signtool verify /v /kp "bdfilter.cat"
 
 echo.
@@ -125,6 +129,9 @@ echo Files created:
 echo - %CERT_NAME%.cer (Test certificate for installation)
 echo - bdfilter.cat (Signed catalog file)
 echo - %BUILD_DIR%\bdfilter.sys (Signed driver)
+echo.
+echo NOTE: If verification showed trust errors above, this is expected
+echo for test certificates that haven't been installed yet.
 echo.
 echo Next steps:
 echo 1. Install the test certificate on target machine:

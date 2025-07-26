@@ -117,14 +117,16 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Verifying signatures...
+echo NOTE: Verification may show trust errors for test certificates - this is expected.
+echo.
 signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys"
 if %errorLevel% NEQ 0 (
-    echo WARNING: Driver signature verification failed
+    echo WARNING: Driver signature verification failed (expected for test certificates)
 )
 
 signtool verify /v /kp "bdfilter.cat"
 if %errorLevel% NEQ 0 (
-    echo WARNING: Catalog signature verification failed
+    echo WARNING: Catalog signature verification failed (expected for test certificates)
 )
 
 echo.
