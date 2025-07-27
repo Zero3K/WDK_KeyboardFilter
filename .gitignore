@@ -22,3 +22,17 @@ Desktop.ini
 
 # Test mode watermark screenshots
 testmode_*.png
+
+# Visual Studio files
+.vs/
+*.vcxproj.user
+*.suo
+*.sdf
+*.opensdf
+*.db
+*.opendb
+*.ipch
+x64/
+Debug/
+Release/
+Win32/

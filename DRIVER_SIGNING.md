@@ -143,6 +143,23 @@ This catalog file must be present and properly signed for the driver to install 
 
 ## Troubleshooting
 
+### Catalog Generation Issues
+
+If you encounter errors like "Could not find file" or "Signability test failed" during catalog generation:
+
+1. **WDK Tools Not in PATH:** The script now automatically searches for WDK tools in standard installation locations:
+   - `C:\Program Files\Windows Kits\10\bin\10.*\x64`
+   - `C:\Program Files (x86)\Windows Kits\10\bin\10.*\x64`
+   - `C:\Program Files\Windows Kits\8.1\bin\x64`
+   - And x86 variants
+
+2. **Multiple OS Support Failure:** The script tries multiple approaches:
+   - First: Comprehensive OS support (Vista through Windows 10)
+   - Second: Windows 7 only (for compatibility)
+   - Third: `makecat.exe` with CDF file as fallback
+
+3. **Visual Studio Developer Command Prompt:** If running from VS 2019 Developer Command Prompt and getting "inf2cat.exe not found", the script will now locate the tool automatically in WDK installation paths.
+
 ### "The required line was not found in the INF" Error
 - This usually means the catalog file is missing or improperly generated
 - Run `create_test_cert.bat [build_dir]` or `sign_driver.bat [build_dir]` to generate the catalog
@@ -259,6 +276,117 @@ signtool verify /v /kp bdfilter.cat    # Verify catalog signature
 - [Microsoft Driver Signing Documentation](https://docs.microsoft.com/en-us/windows-hardware/drivers/install/driver-signing)
 - [Windows Hardware Dev Center](https://developer.microsoft.com/en-us/windows/hardware)
 - [Code Signing Best Practices](https://docs.microsoft.com/en-us/windows-hardware/drivers/install/code-signing-best-practices)
+
+## Troubleshooting
+
+### Catalog Generation Issues
+
+If `create_test_cert.bat` fails with catalog generation errors:
+
+```
+Could not find file 'C:\Users\...\AppData\Local\Temp\WST\...\185'.
+Signability test failed.
+ERROR: Failed to generate catalog file
+```
+
+**Cause:** This typically occurs when `inf2cat.exe` has compatibility issues with your WDK version or Windows version.
+
+**Solutions:**
+1. **The script automatically tries multiple approaches:**
+   - First attempts comprehensive OS support (Vista through Windows 10)
+   - Falls back to Windows 7 only if that fails
+   - Uses `makecat.exe` with the CDF file as final fallback
+
+2. **Manual alternatives:**
+   ```cmd
+   # Try with specific OS versions
+   inf2cat /driver:. /os:10_X64,10_X86
+   
+   # Or use makecat directly
+   makecat bdfilter.cdf
+   ```
+
+3. **Verify file presence:**
+   - Ensure `bdfilter.inf` is in current directory
+   - Ensure `bdfilter.sys` is in current directory or specified build directory
+   - Check that both files are not corrupted
+
+### Installation Issues
+
+**Error: "The hash of the file is not present in the specified catalog file"**
+- Solution: Regenerate the catalog file and re-sign the driver
+
+**Error: "Windows cannot verify the digital signature"**
+- Solution: Install the test certificate or enable test signing mode
+
+## Troubleshooting Catalog Generation Issues
+
+### Problem: inf2cat "Could not find file" Error
+
+**Symptoms:**
+```
+Could not find file 'C:\Users\...\AppData\Local\Temp\WST\...\193'.
+Signability test failed.
+```
+
+**This is a common issue with inf2cat.exe where it creates temporary files during validation but has trouble accessing them.**
+
+**Solutions:**
+
+1. **Use the improved create_test_cert.bat script** - The script now tries multiple approaches automatically:
+   - inf2cat with Windows 10 support only
+   - inf2cat with Windows 7 and 10 support  
+   - inf2cat with Windows 7 only
+   - makecat with bdfilter.cdf file
+   - Basic catalog creation fallback
+
+2. **Clear temp directories:**
+   ```cmd
+   del /q "%TEMP%\*" 2>nul
+   del /q "%TMP%\*" 2>nul
+   ```
+
+3. **Run from elevated command prompt:**
+   ```cmd
+   # Right-click Command Prompt -> Run as Administrator
+   cd /d D:\WDK_KeyboardFilter
+   create_test_cert.bat
+   ```
+
+4. **Check for antivirus interference:**
+   - Temporarily disable real-time protection
+   - Add WDK installation directory to antivirus exclusions
+
+5. **Try installing without catalog (unsigned mode):**
+   ```cmd
+   install.bat . /UNSIGNED
+   ```
+   Note: Requires test signing to be enabled first:
+   ```cmd
+   bcdedit /set testsigning on
+   # Reboot required
+   ```
+
+### Manual Catalog Creation
+
+If automated methods fail, try manual catalog creation:
+
+```cmd
+# Method 1: Try inf2cat with verbose output
+inf2cat /driver:. /os:10_X64 /verbose
+
+# Method 2: Use makecat directly
+makecat -v bdfilter.cdf
+
+# Method 3: Create minimal catalog
+echo [CatalogHeader] > temp.cdf
+echo Name=bdfilter.cat >> temp.cdf
+echo PublicVersion=0x0000001 >> temp.cdf
+echo [CatalogFiles] >> temp.cdf
+echo bdfilter.sys=bdfilter.sys >> temp.cdf
+echo bdfilter.inf=bdfilter.inf >> temp.cdf
+makecat temp.cdf
+```
 
 ## FAQ
 

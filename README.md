@@ -1,6 +1,12 @@
 # WDK_KeyboardFilter
 WDM 7600.16385.1版本
 
+## Build Options
+
+**Visual Studio 2019 Support:** This project now includes Visual Studio 2019 solution and project files. **Requires legacy Windows DDK (Driver Development Kit) and DDKROOT environment variable setup.** See `VISUAL_STUDIO_2019.md` for complete build instructions.
+
+**Traditional DDK Build:** The original Windows DDK build system using `sources` and `makefile` is still supported.
+
 ## Compatibility
 
 **Recent Fix (2024):** Resolved Windows 7 x64 driver startup issue caused by incorrect object reference management in DriverEntry function.

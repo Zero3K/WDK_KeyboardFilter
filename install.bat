@@ -1,15 +1,29 @@
 @echo off
 :: Keyboard Filter Driver Installation Script
 :: Run as Administrator
-:: Usage: install.bat [build_directory]
+:: Usage: install.bat [build_directory] [/UNSIGNED]
 :: Example: install.bat objfre_win7_amd64
+:: Example: install.bat . /UNSIGNED
 
 set BUILD_DIR=%~1
+set UNSIGNED_MODE=0
+
+:: Parse command line arguments
+:parse_args
+if "%~1"=="" goto :args_done
+if /i "%~1"=="/UNSIGNED" set UNSIGNED_MODE=1
+if /i "%~1"=="/unsigned" set UNSIGNED_MODE=1
+if /i "%~1"=="-unsigned" set UNSIGNED_MODE=1
+shift
+goto :parse_args
+
+:args_done
 if "%BUILD_DIR%"=="" set BUILD_DIR=.
 
 echo Keyboard Filter Driver Installation Script
 echo ==========================================
 echo Build directory: %BUILD_DIR%
+if %UNSIGNED_MODE%==1 echo Mode: UNSIGNED (skipping signature verification)
 echo.
 
 :: Check for administrator privileges
@@ -40,6 +54,12 @@ if not exist "%BUILD_DIR%\bdfilter.sys" (
 
 echo Files found successfully.
 echo.
+
+if %UNSIGNED_MODE%==1 (
+    echo UNSIGNED MODE: Skipping signature verification
+    echo WARNING: Installing unsigned driver - test signing must be enabled
+    goto :install_driver
+)
 
 echo Checking driver signature status...
 signtool verify /v /kp "%BUILD_DIR%\bdfilter.sys" >nul 2>&1
@@ -98,6 +118,7 @@ if %DRIVER_SIGNED% NEQ 0 (
     echo Continuing with installation attempt...
 )
 
+:install_driver
 echo.
 echo Installing keyboard filter driver...
 pnputil /add-driver "bdfilter.inf" /install
