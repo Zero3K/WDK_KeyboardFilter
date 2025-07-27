@@ -89,30 +89,69 @@ if %errorLevel% NEQ 0 (
 
 echo.
 echo Generating catalog file...
-echo Trying inf2cat with comprehensive OS support...
-"%INF2CAT_PATH%" /driver:. /os:Vista_X86,Vista_X64,7_X86,7_X64,8_X86,8_X64,6_3_X86,6_3_X64,10_X86,10_X64
+
+:: Clean up any existing catalog file first
+if exist "bdfilter.cat" del "bdfilter.cat" >nul 2>&1
+
+:: Method 1: Try inf2cat with Windows 10 only (most reliable)
+echo Trying inf2cat with Windows 10 support...
+"%INF2CAT_PATH%" /driver:. /os:10_X86,10_X64 /verbose
+if %errorLevel% EQU 0 goto :CatalogSuccess
+
+:: Method 2: Try inf2cat with Windows 7 and 10
+echo inf2cat failed, trying with Windows 7 and 10...
+"%INF2CAT_PATH%" /driver:. /os:7_X86,7_X64,10_X86,10_X64 /verbose
+if %errorLevel% EQU 0 goto :CatalogSuccess
+
+:: Method 3: Try inf2cat with Windows 7 only
+echo inf2cat failed, trying with Windows 7 only...
+"%INF2CAT_PATH%" /driver:. /os:7_X86,7_X64 /verbose
+if %errorLevel% EQU 0 goto :CatalogSuccess
+
+:: Method 4: Try to validate INF file first, then generate catalog
+echo inf2cat failed, validating INF file structure...
+"%INF2CAT_PATH%" /driver:. /os:7_X64 /verbose /nocat
 if %errorLevel% NEQ 0 (
-    echo inf2cat failed, trying with Windows 7 only...
-    "%INF2CAT_PATH%" /driver:. /os:7_X86,7_X64
-    if %errorLevel% NEQ 0 (
-        echo inf2cat failed, trying makecat as fallback...
-        where makecat >nul 2>&1
-        if %errorLevel% EQU 0 (
-            makecat bdfilter.cdf
-            if %errorLevel% NEQ 0 (
-                echo ERROR: All catalog generation methods failed
-                echo Make sure bdfilter.inf is present and valid in current directory
-                pause
-                exit /b 1
-            )
-        ) else (
-            echo ERROR: Failed to generate catalog file
-            echo Make sure bdfilter.inf is present and valid in current directory
-            echo Consider installing a compatible version of Windows SDK/WDK
-            pause
-            exit /b 1
-        )
-    )
+    echo WARNING: INF file validation failed - this may cause catalog generation issues
+    echo Continuing with makecat fallback...
+)
+
+:: Method 5: Try makecat as fallback
+echo Trying makecat as fallback...
+where makecat >nul 2>&1
+if %errorLevel% EQU 0 (
+    echo Creating catalog using makecat with bdfilter.cdf...
+    makecat -v bdfilter.cdf
+    if %errorLevel% EQU 0 goto :CatalogSuccess
+    
+    echo makecat failed, trying alternative approach...
+    :: Try creating a basic catalog manually
+    call :CreateBasicCatalog
+    if %errorLevel% EQU 0 goto :CatalogSuccess
+)
+
+:: All methods failed
+echo ERROR: All catalog generation methods failed
+echo.
+echo Troubleshooting suggestions:
+echo 1. Check that bdfilter.inf is valid and properly formatted
+echo 2. Ensure you have administrative privileges
+echo 3. Try running from a different directory
+echo 4. Check Windows temp directory permissions
+echo 5. Verify WDK installation is complete
+echo.
+echo You can try to install the driver without a catalog file by running:
+echo   install.bat ^<build_directory^> /UNSIGNED
+echo.
+pause
+exit /b 1
+
+:CatalogSuccess
+echo Catalog generation successful!
+if not exist "bdfilter.cat" (
+    echo ERROR: bdfilter.cat was not created despite successful return code
+    pause
+    exit /b 1
 )
 
 echo.
@@ -167,6 +206,42 @@ echo.
 pause
 
 goto :eof
+
+:CreateBasicCatalog
+:: Function to create a basic catalog file using an alternative method
+echo Attempting to create basic catalog file...
+
+:: Create a minimal CDF file if one doesn't exist or is corrupted
+if not exist "bdfilter.cdf" (
+    echo Creating minimal CDF file...
+    echo [CatalogHeader] > bdfilter.cdf
+    echo Name=bdfilter.cat >> bdfilter.cdf
+    echo ResultDir= >> bdfilter.cdf
+    echo PublicVersion=0x0000001 >> bdfilter.cdf
+    echo EncodingType=0x00010001 >> bdfilter.cdf
+    echo CATATTR1=0x10010001:OSAttr:2:6.1,2:10.0 >> bdfilter.cdf
+    echo. >> bdfilter.cdf
+    echo [CatalogFiles] >> bdfilter.cdf
+    echo bdfilter.sys=bdfilter.sys >> bdfilter.cdf
+    echo bdfilter.inf=bdfilter.inf >> bdfilter.cdf
+)
+
+:: Try makecat with the CDF
+makecat -v bdfilter.cdf
+if %errorLevel% EQU 0 (
+    echo Basic catalog created successfully using makecat
+    goto :eof
+)
+
+:: If that fails, try without verbose mode
+makecat bdfilter.cdf
+if %errorLevel% EQU 0 (
+    echo Basic catalog created successfully using makecat ^(non-verbose^)
+    goto :eof
+)
+
+echo Failed to create basic catalog
+exit /b 1
 
 :FindWDKTools
 :: Function to locate WDK tools in standard installation paths

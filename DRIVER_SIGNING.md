@@ -319,6 +319,75 @@ ERROR: Failed to generate catalog file
 **Error: "Windows cannot verify the digital signature"**
 - Solution: Install the test certificate or enable test signing mode
 
+## Troubleshooting Catalog Generation Issues
+
+### Problem: inf2cat "Could not find file" Error
+
+**Symptoms:**
+```
+Could not find file 'C:\Users\...\AppData\Local\Temp\WST\...\193'.
+Signability test failed.
+```
+
+**This is a common issue with inf2cat.exe where it creates temporary files during validation but has trouble accessing them.**
+
+**Solutions:**
+
+1. **Use the improved create_test_cert.bat script** - The script now tries multiple approaches automatically:
+   - inf2cat with Windows 10 support only
+   - inf2cat with Windows 7 and 10 support  
+   - inf2cat with Windows 7 only
+   - makecat with bdfilter.cdf file
+   - Basic catalog creation fallback
+
+2. **Clear temp directories:**
+   ```cmd
+   del /q "%TEMP%\*" 2>nul
+   del /q "%TMP%\*" 2>nul
+   ```
+
+3. **Run from elevated command prompt:**
+   ```cmd
+   # Right-click Command Prompt -> Run as Administrator
+   cd /d D:\WDK_KeyboardFilter
+   create_test_cert.bat
+   ```
+
+4. **Check for antivirus interference:**
+   - Temporarily disable real-time protection
+   - Add WDK installation directory to antivirus exclusions
+
+5. **Try installing without catalog (unsigned mode):**
+   ```cmd
+   install.bat . /UNSIGNED
+   ```
+   Note: Requires test signing to be enabled first:
+   ```cmd
+   bcdedit /set testsigning on
+   # Reboot required
+   ```
+
+### Manual Catalog Creation
+
+If automated methods fail, try manual catalog creation:
+
+```cmd
+# Method 1: Try inf2cat with verbose output
+inf2cat /driver:. /os:10_X64 /verbose
+
+# Method 2: Use makecat directly
+makecat -v bdfilter.cdf
+
+# Method 3: Create minimal catalog
+echo [CatalogHeader] > temp.cdf
+echo Name=bdfilter.cat >> temp.cdf
+echo PublicVersion=0x0000001 >> temp.cdf
+echo [CatalogFiles] >> temp.cdf
+echo bdfilter.sys=bdfilter.sys >> temp.cdf
+echo bdfilter.inf=bdfilter.inf >> temp.cdf
+makecat temp.cdf
+```
+
 ## FAQ
 
 **Q: Why does my driver work on Windows 7 x86 but not x64?**
