@@ -93,20 +93,44 @@ echo Generating catalog file...
 :: Clean up any existing catalog file first
 if exist "bdfilter.cat" del "bdfilter.cat" >nul 2>&1
 
+:: Create temporary directory with only driver files to avoid processing .git, .vs, etc.
+set TEMP_DRIVER_DIR=%TEMP%\bdfilter_catalog_%RANDOM%
+if exist "%TEMP_DRIVER_DIR%" rmdir /s /q "%TEMP_DRIVER_DIR%" >nul 2>&1
+mkdir "%TEMP_DRIVER_DIR%"
+
+:: Copy only the necessary driver files to temp directory
+copy "bdfilter.inf" "%TEMP_DRIVER_DIR%\" >nul
+copy "%BUILD_DIR%\bdfilter.sys" "%TEMP_DRIVER_DIR%\" >nul
+
 :: Method 1: Try inf2cat with Windows 10 only (most reliable)
 echo Trying inf2cat with Windows 10 support...
-"%INF2CAT_PATH%" /driver:. /os:10_X86,10_X64 /verbose
-if %errorLevel% EQU 0 goto :CatalogSuccess
+"%INF2CAT_PATH%" /driver:"%TEMP_DRIVER_DIR%" /os:10_X86,10_X64 /verbose
+if %errorLevel% EQU 0 (
+    copy "%TEMP_DRIVER_DIR%\bdfilter.cat" "." >nul
+    rmdir /s /q "%TEMP_DRIVER_DIR%" >nul 2>&1
+    goto :CatalogSuccess
+)
 
 :: Method 2: Try inf2cat with Windows 7 and 10
 echo inf2cat failed, trying with Windows 7 and 10...
-"%INF2CAT_PATH%" /driver:. /os:7_X86,7_X64,10_X86,10_X64 /verbose
-if %errorLevel% EQU 0 goto :CatalogSuccess
+"%INF2CAT_PATH%" /driver:"%TEMP_DRIVER_DIR%" /os:7_X86,7_X64,10_X86,10_X64 /verbose
+if %errorLevel% EQU 0 (
+    copy "%TEMP_DRIVER_DIR%\bdfilter.cat" "." >nul
+    rmdir /s /q "%TEMP_DRIVER_DIR%" >nul 2>&1
+    goto :CatalogSuccess
+)
 
 :: Method 3: Try inf2cat with Windows 7 only
 echo inf2cat failed, trying with Windows 7 only...
-"%INF2CAT_PATH%" /driver:. /os:7_X86,7_X64 /verbose
-if %errorLevel% EQU 0 goto :CatalogSuccess
+"%INF2CAT_PATH%" /driver:"%TEMP_DRIVER_DIR%" /os:7_X86,7_X64 /verbose
+if %errorLevel% EQU 0 (
+    copy "%TEMP_DRIVER_DIR%\bdfilter.cat" "." >nul
+    rmdir /s /q "%TEMP_DRIVER_DIR%" >nul 2>&1
+    goto :CatalogSuccess
+)
+
+:: Clean up temp directory since inf2cat methods failed
+rmdir /s /q "%TEMP_DRIVER_DIR%" >nul 2>&1
 
 :: Method 4: Try to validate INF file first, then generate catalog
 echo inf2cat failed, validating INF file structure...

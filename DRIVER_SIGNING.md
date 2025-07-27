@@ -158,7 +158,9 @@ If you encounter errors like "Could not find file" or "Signability test failed" 
    - Second: Windows 7 only (for compatibility)
    - Third: `makecat.exe` with CDF file as fallback
 
-3. **Visual Studio Developer Command Prompt:** If running from VS 2019 Developer Command Prompt and getting "inf2cat.exe not found", the script will now locate the tool automatically in WDK installation paths.
+3. **Temporary File Processing Issue:** The script now uses a temporary directory containing only the necessary driver files (INF and SYS) during catalog generation. This prevents `inf2cat` from processing unwanted files in `.git`, `.vs`, and other development directories, improving performance and avoiding potential errors.
+
+4. **Visual Studio Developer Command Prompt:** If running from VS 2019 Developer Command Prompt and getting "inf2cat.exe not found", the script will now locate the tool automatically in WDK installation paths.
 
 ### "The required line was not found in the INF" Error
 - This usually means the catalog file is missing or improperly generated
